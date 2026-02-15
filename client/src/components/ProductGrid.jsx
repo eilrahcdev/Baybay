@@ -1,36 +1,53 @@
-import { Heart } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
-function ProductCard({ item }) {
-  const [liked, setLiked] = useState(false);
+function ProductCard({ item, onQuickView }) {
+  const image =
+    item.image_url ||
+    item.image ||
+    item.img ||
+    "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1200";
+
+  const name = item.name || item.title || "Product";
+  const description = item.description || "No description.";
+  const price = item.price ?? 0;
 
   return (
-    <div className="rounded-2xl bg-white border border-baybay-sand shadow-soft overflow-hidden group">
-      <div className="relative">
-        <div
-          className="h-40 bg-cover bg-center"
-          style={{
-            backgroundImage: `url(${item.image_url || "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1200"})`,
-          }}
+    <div
+      className="rounded-2xl bg-white border border-baybay-sand shadow-soft overflow-hidden hover:shadow-md transition cursor-pointer"
+      onClick={() => onQuickView?.(item)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && onQuickView?.(item)}
+    >
+      {/* ✅ Responsive image */}
+      <div className="relative w-full aspect-[4/3] bg-black/5">
+        <img
+          src={image}
+          alt={name}
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover"
         />
-        <button
-          onClick={() => setLiked((v) => !v)}
-          className="absolute top-3 right-3 h-10 w-10 rounded-full bg-white/90 border border-baybay-sand shadow-soft grid place-items-center hover:scale-105 transition"
-          aria-label="Save"
-        >
-          <Heart size={18} className={liked ? "fill-baybay-cocoa text-baybay-cocoa" : "text-black/55"} />
-        </button>
       </div>
 
       <div className="p-4">
-        <p className="text-xs font-semibold text-baybay-cocoa">{item.category || "Delicacy"}</p>
-        <h4 className="mt-1 font-semibold leading-snug">{item.name}</h4>
-        <p className="mt-1 text-sm text-black/65 line-clamp-2">{item.description}</p>
+        <h4 className="font-semibold leading-snug line-clamp-1">{name}</h4>
 
-        <div className="mt-4 flex items-center justify-between">
-          <p className="font-semibold">₱{Number(item.price || 0).toFixed(0)}</p>
-          <button className="rounded-full bg-baybay-cocoa text-white px-4 py-2 text-sm shadow-soft hover:translate-y-[-1px] active:translate-y-0 transition">
-            View
+        <p className="mt-1 text-sm text-black/65 line-clamp-2">{description}</p>
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <p className="font-semibold text-[#7C3A2E]">
+            ₱{Number(price || 0).toLocaleString()}
+          </p>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onQuickView?.(item);
+            }}
+            className="rounded-full bg-baybay-cocoa text-white px-4 py-2 text-sm shadow-soft hover:translate-y-[-1px] active:translate-y-0 transition whitespace-nowrap"
+          >
+            Quick View
           </button>
         </div>
       </div>
@@ -38,33 +55,32 @@ function ProductCard({ item }) {
   );
 }
 
-export default function ProductGrid({ products, loading }) {
+export default function ProductGrid({ products = [], loading = false, onQuickView }) {
   const content = useMemo(() => {
-    if (loading) {
-      return Array.from({ length: 8 }).map((_, i) => ({ id: i, skeleton: true }));
-    }
-    return products || [];
+    if (loading) return Array.from({ length: 10 }).map((_, i) => ({ id: i, skeleton: true }));
+    return Array.isArray(products) ? products : [];
   }, [products, loading]);
 
   return (
-    <div id="shops" className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
       {content.map((p) =>
         p.skeleton ? (
-          <div key={p.id} className="rounded-2xl bg-white border border-baybay-sand shadow-soft overflow-hidden">
-            <div className="h-40 bg-baybay-sand animate-pulse" />
+          <div
+            key={p.id}
+            className="rounded-2xl bg-white border border-baybay-sand shadow-soft overflow-hidden"
+          >
+            <div className="aspect-[4/3] bg-baybay-sand animate-pulse" />
             <div className="p-4 space-y-3">
-              <div className="h-3 w-20 bg-baybay-sand animate-pulse rounded" />
-              <div className="h-4 w-32 bg-baybay-sand animate-pulse rounded" />
+              <div className="h-4 w-2/3 bg-baybay-sand animate-pulse rounded" />
               <div className="h-3 w-full bg-baybay-sand animate-pulse rounded" />
-              <div className="h-3 w-2/3 bg-baybay-sand animate-pulse rounded" />
+              <div className="h-3 w-5/6 bg-baybay-sand animate-pulse rounded" />
               <div className="h-9 w-full bg-baybay-sand animate-pulse rounded-full" />
             </div>
           </div>
         ) : (
-          <ProductCard key={p.id} item={p} />
+          <ProductCard key={p.id} item={p} onQuickView={onQuickView} />
         )
       )}
     </div>
   );
 }
-    

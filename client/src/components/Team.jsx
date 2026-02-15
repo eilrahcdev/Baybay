@@ -1,15 +1,53 @@
-export default function Team({ team = [] }) {
+import { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
+export default function TeamCarousel({ team = [], loading = false }) {
+  const slides = useMemo(() => {
+    const list = Array.isArray(team) ? team : [];
+    // You said you inserted the whole team image, not per member.
+    // So each row can be a slide.
+    return list
+      .map((t) => ({
+        id: t.id,
+        title: t.title || "Our Team",
+        image:
+          t.image_url ||
+          t.photo_url ||
+          t.avatar_url ||
+          t.team_image ||
+          null,
+      }))
+      .filter((s) => !!s.image);
+  }, [team]);
+
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const timer = setInterval(() => {
+      setIdx((v) => (v + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
+  function prev() {
+    if (!slides.length) return;
+    setIdx((v) => (v - 1 + slides.length) % slides.length);
+  }
+
+  function next() {
+    if (!slides.length) return;
+    setIdx((v) => (v + 1) % slides.length);
+  }
+
   return (
-    <section
-      id="team"
-      className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden scroll-animate"
-    >
+    <section id="team" className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden reveal-section">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(124,58,46,0.08)_1px,transparent_1px)] [background-size:20px_20px] z-0 pointer-events-none" />
 
       <div className="relative z-10 max-w-7xl mx-auto">
-        <div className="text-center mb-14">
+        <div className="text-center mb-10">
           <span className="inline-block py-1 px-3 rounded-full bg-[#7C3A2E]/10 text-[#7C3A2E] text-xs font-semibold tracking-wide uppercase mb-4">
-            The Artisans Behind the Screen
+            The Team Behind the Screen
           </span>
 
           <h2 className="text-4xl md:text-5xl font-display font-bold text-[#7C3A2E] mb-4">
@@ -17,70 +55,70 @@ export default function Team({ team = [] }) {
           </h2>
 
           <p className="max-w-2xl mx-auto text-lg text-gray-600 leading-relaxed">
-            We are a passionate group dedicated to preserving Pangasinan's cultural
-            heritage through technology—connecting local artisans with the world.
+            We are a passionate group dedicated to preserving Pangasinan’s cultural heritage through technology—connecting local artisans with the world.
           </p>
         </div>
 
-        {team.length === 0 ? (
+        {loading ? (
+          <div className="rounded-3xl border border-black/10 bg-white p-8 shadow-soft">
+            <div className="h-[320px] sm:h-[420px] bg-baybay-sand animate-pulse rounded-2xl" />
+          </div>
+        ) : slides.length === 0 ? (
           <div className="max-w-2xl mx-auto text-center rounded-2xl border border-gray-200 bg-white p-10 shadow-sm">
-            <h3 className="font-display text-2xl font-bold text-gray-900">
-              Team section is ready
-            </h3>
+            <h3 className="font-display text-2xl font-bold text-gray-900">Team section is ready</h3>
             <p className="mt-2 text-gray-600">
-              Add members in Supabase table <b>team</b> to populate this section.
+              Team's not found. Please check your internet connection and try again.
             </p>
-            <div className="mt-6 inline-flex items-center gap-2 text-sm text-gray-500">
-              <span className="material-icons text-base">info</span>
-              Required columns: <code className="px-2 py-1 bg-white border rounded">id</code>,{" "}
-              <code className="px-2 py-1 bg-white border rounded">full_name</code>,{" "}
-              <code className="px-2 py-1 bg-white border rounded">role</code>,{" "}
-              <code className="px-2 py-1 bg-white border rounded">bio</code>,{" "}
-              <code className="px-2 py-1 bg-white border rounded">avatar_url</code>
-            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {team.map((m) => (
-              <div
-                key={m.id}
-                className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 p-6 flex flex-col items-center text-center"
-              >
-                <div className="relative w-32 h-32 mb-6">
-                  <div className="absolute inset-0 rounded-full bg-[#7C3A2E] opacity-10 group-hover:scale-110 transition-transform duration-300" />
-                  <img
-                    alt={`Portrait of ${m.full_name || "Team member"}`}
-                    className="w-full h-full object-cover rounded-full border-4 border-white shadow-md group-hover:scale-105 transition-transform duration-300"
-                    src={m.avatar_url}
-                    loading="lazy"
-                  />
-                </div>
+          <div className="rounded-3xl border border-black/10 bg-white/80 backdrop-blur p-4 sm:p-6 shadow-soft">
+            <div className="relative overflow-hidden rounded-2xl">
+              <img
+                src={slides[idx].image}
+                alt={slides[idx].title}
+                className="w-full h-[320px] sm:h-[460px] object-cover"
+                loading="lazy"
+              />
 
-                <h3 className="text-xl font-bold text-gray-900 mb-1">{m.full_name}</h3>
-                <p className="text-[#7C3A2E] font-medium text-sm mb-4">{m.role}</p>
+              {slides.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={prev}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/90 border border-black/10 grid place-items-center hover:bg-white transition"
+                    aria-label="Previous"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
 
-                <p className="text-sm text-gray-600 mb-6 line-clamp-3">{m.bio}</p>
+                  <button
+                    type="button"
+                    onClick={next}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/90 border border-black/10 grid place-items-center hover:bg-white transition"
+                    aria-label="Next"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
 
-                <button
-                  type="button"
-                  className="mt-auto text-sm font-semibold text-[#7C3A2E] hover:underline"
-                >
-                  View Profile
-                </button>
-              </div>
-            ))}
+                  {/* Dots */}
+                  <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
+                    {slides.map((s, i) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setIdx(i)}
+                        className={`h-2.5 w-2.5 rounded-full transition ${
+                          i === idx ? "bg-[#7C3A2E]" : "bg-white/70"
+                        }`}
+                        aria-label={`Go to slide ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
-
-        <div className="mt-16 text-center">
-          <a
-            className="inline-flex items-center px-8 py-3 rounded-full shadow-sm text-white bg-[#7C3A2E] hover:bg-[#5e2b22] transition"
-            href="#about"
-          >
-            Join Our Mission
-            <span className="material-icons ml-2 text-sm">arrow_forward</span>
-          </a>
-        </div>
       </div>
     </section>
   );

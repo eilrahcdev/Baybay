@@ -1,19 +1,38 @@
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 export function useReveal() {
-  useEffect(() => {
-    const els = Array.from(document.querySelectorAll(".reveal-section"));
+  const location = useLocation();
 
-    const io = new IntersectionObserver(
+  useEffect(() => {
+    const elements = Array.from(document.querySelectorAll(".reveal-section"));
+
+    // If no reveal sections, nothing to do
+    if (!elements.length) return;
+
+    // Reset reveal state when navigating so sections can animate again
+    elements.forEach((el) => {
+      el.classList.remove("is-visible");
+    });
+
+    const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) e.target.classList.add("is-visible");
-        });
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target); // reveal once per navigation
+          }
+        }
       },
-      { threshold: 0.12 }
+      {
+        threshold: 0.12,
+        rootMargin: "0px 0px -10% 0px",
+      }
     );
 
-    els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, []);
+    elements.forEach((el) => observer.observe(el));
+
+    // Cleanup when route changes/unmounts
+    return () => observer.disconnect();
+  }, [location.pathname]);
 }

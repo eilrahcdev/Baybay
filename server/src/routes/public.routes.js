@@ -1,92 +1,168 @@
-import express from "express";
+import { Router } from "express";
 import { supabaseAdmin } from "../supabaseAdmin.js";
-import { newsletterSchema } from "../validators.js";
 
-const router = express.Router();
+const router = Router();
 
-// Health
-router.get("/health", (req, res) => {
-  res.json({ ok: true, service: "baybay-api" });
-});
-
-// Products
+/**
+ * GET /api/products?limit=8
+ * Reads from Supabase table: products
+ */
 router.get("/products", async (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit || "12", 10), 50);
-  const featured = req.query.featured === "true";
+  try {
+    const limit = Math.min(parseInt(req.query.limit || "8", 10), 200);
 
-  let query = supabaseAdmin
-    .from("products")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(limit);
+    const { data, error } = await supabaseAdmin
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(limit);
 
-  if (featured) query = query.eq("is_featured", true);
-
-  const { data, error } = await query;
-
-  if (error) return res.status(500).json({ message: error.message });
-  res.json(data);
+    if (error) return res.status(400).json({ message: error.message });
+    return res.json(data || []);
+  } catch (e) {
+    return res.status(500).json({ message: e.message || "Server error" });
+  }
 });
 
-// Featured artisan (or list)
+/**
+ * GET /api/artisans?featured=true
+ */
 router.get("/artisans", async (req, res) => {
-  const featured = req.query.featured === "true";
+  try {
+    const featured = String(req.query.featured || "").toLowerCase() === "true";
 
-  let query = supabaseAdmin
-    .from("artisans")
-    .select("*")
-    .order("created_at", { ascending: false });
+    let q = supabaseAdmin.from("artisans").select("*");
 
-  if (featured) query = query.eq("is_featured", true).limit(1);
+    if (featured) q = q.eq("is_featured", true);
 
-  const { data, error } = await query;
+    q = q.order("created_at", { ascending: false });
 
-  if (error) return res.status(500).json({ message: error.message });
-  res.json(data);
+    const { data, error } = await q;
+
+    if (error) return res.status(400).json({ message: error.message });
+    return res.json(data || []);
+  } catch (e) {
+    return res.status(500).json({ message: e.message || "Server error" });
+  }
 });
 
-// Team
+/**
+ * ✅ GET /api/product-variants?product_id=36
+ * Reads from Supabase table: product_variants
+ */
+router.get("/product-variants", async (req, res) => {
+  try {
+    const productIdRaw = req.query.product_id;
+    const productId = productIdRaw ? Number(productIdRaw) : null;
+
+    if (!productId || Number.isNaN(productId)) {
+      return res.status(400).json({ message: "product_id is required and must be a number" });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("product_variants")
+      .select("*")
+      .eq("product_id", productId)
+      .eq("is_available", true)
+      .order("weight_kg", { ascending: true });
+
+    if (error) return res.status(400).json({ message: error.message });
+    return res.json(data || []);
+  } catch (e) {
+    return res.status(500).json({ message: e.message || "Server error" });
+  }
+});
+
+/**
+ * GET /api/team
+ */
 router.get("/team", async (req, res) => {
-  const { data, error } = await supabaseAdmin
-    .from("team_members")
-    .select("*")
-    .order("created_at", { ascending: true });
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("team")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-  if (error) return res.status(500).json({ message: error.message });
-  res.json(data);
+    if (error) return res.status(400).json({ message: error.message });
+    return res.json(data || []);
+  } catch (e) {
+    return res.status(500).json({ message: e.message || "Server error" });
+  }
 });
 
-// Impact stats
-router.get("/impact", async (req, res) => {
-  const { data, error } = await supabaseAdmin
-    .from("impact_stats")
-    .select("*")
-    .order("created_at", { ascending: true });
+/**
+ * GET /api/search?q=keyword
+ * Case-insensitive partial word search for products + artisans
+ */
+router.get("/search", async (req, res) => {
+  try {
+    const raw = String(req.query.q || "").trim();
+    if (!raw) {
+      return res.json({ products: [], artisans: [] });
+    }
 
-  if (error) return res.status(500).json({ message: error.message });
-  res.json(data);
-});
+    // Normalize spaces + lowercase
+    const normalized = raw.replace(/\s+/g, " ").toLowerCase();
 
-// Newsletter subscribe
-router.post("/newsletter/subscribe", async (req, res) => {
-  const parsed = newsletterSchema.safeParse(req.body);
-  if (!parsed.success) {
-    return res.status(400).json({ message: "Invalid email" });
+    // Split into words (minimum 2 characters)
+    const terms = normalized
+      .split(" ")
+      .map((t) => t.trim())
+      .filter((t) => t.length >= 2);
+
+    if (terms.length === 0) {
+      return res.json({ products: [], artisans: [] });
+    }
+
+    const esc = (s) => s.replaceAll(",", "%2C");
+
+    // ---------- PRODUCTS SEARCH ----------
+    const productFilters = [];
+    for (const word of terms) {
+      const like = esc(`%${word}%`);
+      productFilters.push(`name.ilike.${like}`);
+      productFilters.push(`description.ilike.${like}`);
+      productFilters.push(`category.ilike.${like}`);
+    }
+
+    // ---------- ARTISANS SEARCH ----------
+    const artisanFilters = [];
+    for (const word of terms) {
+      const like = esc(`%${word}%`);
+      artisanFilters.push(`name.ilike.${like}`);
+      artisanFilters.push(`title.ilike.${like}`);
+      artisanFilters.push(`bio.ilike.${like}`);
+    }
+
+    const [pRes, aRes] = await Promise.all([
+      supabaseAdmin
+        .from("products")
+        .select("id,name,description,image_url,price,category")
+        .or(productFilters.join(","))
+        .limit(12),
+
+      supabaseAdmin
+        .from("artisans")
+        .select("id,name,title,bio,image_url")
+        .or(artisanFilters.join(","))
+        .limit(12),
+    ]);
+
+    if (pRes.error) {
+      return res.status(400).json({ message: pRes.error.message });
+    }
+
+    if (aRes.error) {
+      return res.status(400).json({ message: aRes.error.message });
+    }
+
+    return res.json({
+      products: pRes.data || [],
+      artisans: aRes.data || [],
+    });
+  } catch (e) {
+    return res.status(500).json({ message: e.message || "Server error" });
   }
-
-  const email = parsed.data.email.toLowerCase();
-
-  const { error } = await supabaseAdmin
-    .from("newsletter_subscribers")
-    .insert([{ email }]);
-
-  // If duplicate, return friendly success
-  if (error?.message?.toLowerCase().includes("duplicate") || error?.code === "23505") {
-    return res.json({ ok: true, message: "You are already subscribed." });
-  }
-
-  if (error) return res.status(500).json({ message: error.message });
-  res.json({ ok: true, message: "Subscribed successfully!" });
 });
 
 export default router;

@@ -139,7 +139,7 @@ export default function Signup() {
             Welcome to Baybay!
           </h2>
           <p className="mt-2 text-center text-sm text-black/60">
-            Sign up to start showcasing your craft.
+            Sign up to start exploring Pangasinan's atisans and their crafts.
           </p>
 
           {error ? (

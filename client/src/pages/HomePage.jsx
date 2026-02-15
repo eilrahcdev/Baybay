@@ -1,19 +1,129 @@
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { api } from "../lib/api";
+import { useAuth } from "../auth/AuthProvider";
+
+import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import AboutPurpose from "../components/AboutPurpose";
-import ImpactCards from "../components/ImpactCards";
-import Heritage from "../components/Heritage";
+import Artisan from "../components/Artisan";
 import Shows from "../components/Shows";
 import Team from "../components/Team";
+import Footer from "../components/Footer";
+import ProductQuickViewModal from "../components/ProductQuickViewModal";
+import AuthGateModal from "../components/AuthGateModal";
 
-export default function HomePage() {
+export default function HomePage({
+  featured = [],
+  loadingProducts = false,
+  team = [],
+  loadingTeam = false,
+}) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
+
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
+
+  // ✅ Auth gate modal state (ONLY here)
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [redirectTo, setRedirectTo] = useState(null);
+
+  // ✅ fetch featured artisans from DB
+  const [artisans, setArtisans] = useState([]);
+  const [loadingArtisans, setLoadingArtisans] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+
+    async function loadArtisans() {
+      try {
+        setLoadingArtisans(true);
+        const a = await api.artisansFeatured();
+        if (!alive) return;
+        setArtisans(Array.isArray(a) ? a : []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (!alive) return;
+        setLoadingArtisans(false);
+      }
+    }
+
+    loadArtisans();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // ✅ If we were redirected back home due to auth gate, pop the modal HERE
+  useEffect(() => {
+    const gate = location.state?.authGate;
+    if (!gate?.from) return;
+
+    // Open modal and remember intended path
+    setRedirectTo(gate.from);
+    setAuthModalOpen(true);
+
+    // Clear the state so it doesn't reopen on refresh/back
+    navigate("/", { replace: true, state: {} });
+  }, [location.state, navigate]);
+
+  // ✅ helper: gate navigation from homepage clicks
+  const goProtected = (path) => {
+    if (!user) {
+      setRedirectTo(path);
+      setAuthModalOpen(true);
+      return;
+    }
+    navigate(path);
+  };
+
   return (
-    <main className="w-full">
+    <>
+      <Navbar />
       <Hero />
       <AboutPurpose />
-      <ImpactCards />
-      <Heritage />
-      <Shows />
-      <Team />
-    </main>
+
+      <Artisan
+        artisans={artisans}
+        loading={loadingArtisans}
+        onViewDetails={(artisanId) => goProtected(`/artisans/${artisanId}`)}
+      />
+
+      <Shows
+        featured={featured}
+        loading={loadingProducts}
+        onQuickView={(p) => setQuickViewProduct(p)}
+        onViewAll={() => goProtected("/products")}
+      />
+
+      <Team team={team} loading={loadingTeam} />
+
+      {/* ✅ Auth modal is ONLY rendered on HomePage */}
+      <AuthGateModal
+        open={authModalOpen}
+        title="Sign up or log in first to continue"
+        message="You must be logged in to view artisan details and all products."
+        onClose={() => {
+          setAuthModalOpen(false);
+          setRedirectTo(null);
+        }}
+        onLogin={() => {
+          navigate("/login", {
+            state: { from: redirectTo || "/" },
+          });
+        }}
+      />
+
+      <Footer />
+
+      {quickViewProduct && (
+        <ProductQuickViewModal
+          product={quickViewProduct}
+          onClose={() => setQuickViewProduct(null)}
+        />
+      )}
+    </>
   );
 }

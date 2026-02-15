@@ -28,7 +28,7 @@ export default function Hero() {
           className="inline-block bg-white text-[#7C3A2E] hover:bg-orange-50 font-bold py-3 px-8 rounded-full transition shadow-lg transform hover:-translate-y-1"
           href="#about"
         >
-          Start Your Artisan Journey
+          Start Your Journey
         </a>
       </div>
     </header>

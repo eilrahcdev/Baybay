@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from || "/";
 
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
@@ -28,25 +31,28 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
         setError(error.message);
         return;
       }
 
-      // If email confirmation is required, Supabase might return a session but user is still not confirmed.
-      // A safer check is to fetch user again:
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData?.user;
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr) {
+        setError(userErr.message);
+        await supabase.auth.signOut();
+        return;
+      }
 
+      const user = userData?.user;
       if (user && !user.email_confirmed_at) {
         setError("Please verify your email first. Check your inbox for the verification link.");
         await supabase.auth.signOut();
         return;
       }
 
-      navigate("/");
+      navigate(from, { replace: true });
     } catch {
       setError("Login failed. Please try again.");
     } finally {
@@ -134,10 +140,7 @@ export default function Login() {
             </div>
 
             <div className="flex items-center justify-between text-sm">
-              <Link
-                to="/forgot-password"
-                className="text-[#7C3A2E] hover:underline font-medium"
-              >
+              <Link to="/forgot-password" className="text-[#7C3A2E] hover:underline font-medium">
                 Forgot password?
               </Link>
             </div>

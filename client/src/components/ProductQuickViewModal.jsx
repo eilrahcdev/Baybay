@@ -1,67 +1,184 @@
+import { useEffect, useMemo, useState } from "react";
+import { X } from "lucide-react";
+import { api } from "../lib/api";
+
 export default function ProductQuickViewModal({ product, onClose }) {
   if (!product) return null;
 
-  const price = Number(product.price || 0).toFixed(0);
+  const productId = product?.id;
+
+  const [variants, setVariants] = useState([]);
+  const [loadingVariants, setLoadingVariants] = useState(false);
+  const [selectedVariantId, setSelectedVariantId] = useState("");
+
+  // Lock scroll while modal open
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev || "";
+    };
+  }, []);
+
+  // Load variants when modal opens
+  useEffect(() => {
+    let alive = true;
+
+    async function loadVariants() {
+      if (!productId) return;
+
+      try {
+        setLoadingVariants(true);
+        const data = await api.productVariants(productId);
+
+        if (!alive) return;
+
+        const list = Array.isArray(data) ? data : [];
+        setVariants(list);
+
+        // Default select first variant
+        if (list.length) setSelectedVariantId(String(list[0].id));
+        else setSelectedVariantId("");
+      } catch (e) {
+        console.error(e);
+        if (!alive) return;
+        setVariants([]);
+        setSelectedVariantId("");
+      } finally {
+        if (!alive) return;
+        setLoadingVariants(false);
+      }
+    }
+
+    loadVariants();
+    return () => {
+      alive = false;
+    };
+  }, [productId]);
+
+  const selectedVariant = useMemo(() => {
+    if (!selectedVariantId) return null;
+    return variants.find((v) => String(v.id) === String(selectedVariantId)) || null;
+  }, [variants, selectedVariantId]);
+
+  const name = product?.name || product?.title || "Product";
+  const img = product?.image_url || product?.image || product?.img;
+
+  // If variants exist, show selected variant price; else show product.price
+  const displayPrice = selectedVariant?.price ?? product?.price ?? null;
 
   return (
-    <div
-      className="fixed inset-0 z-[999] bg-black/60 flex items-center justify-center p-4"
-      onMouseDown={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Product quick view"
-    >
-      <div
-        className="w-full max-w-3xl rounded-2xl bg-white overflow-hidden shadow-2xl"
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        <div className="grid md:grid-cols-2">
-          <div className="h-72 md:h-full bg-gray-100">
-            <img
-              src={product.image_url}
-              alt={product.name || "Product"}
-              className="w-full h-full object-cover"
-            />
-          </div>
+    <div className="fixed inset-0 z-[9999]">
+      {/* Backdrop */}
+      <button
+        type="button"
+        aria-label="Close modal"
+        onClick={onClose}
+        className="absolute inset-0 bg-black/45 backdrop-blur-sm"
+      />
 
-          <div className="p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="font-display text-2xl font-bold text-gray-900">
-                  {product.name}
-                </h3>
-                <p className="text-gray-600 mt-1">
-                  {product.category || "Delicacy"}
+      {/* Modal Card */}
+      <div className="absolute inset-0 flex items-center justify-center p-4">
+        <div className="relative w-full max-w-3xl rounded-2xl bg-white shadow-2xl overflow-hidden">
+          {/* Close */}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute right-3 top-3 z-10 rounded-full bg-white/90 p-2 text-black/70 hover:text-black hover:bg-white"
+          >
+            <X size={18} />
+          </button>
+
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            {/* Image */}
+            <div className="bg-black/5">
+              {img ? (
+                <img src={img} alt={name} className="h-72 md:h-full w-full object-cover" />
+              ) : (
+                <div className="h-72 md:h-full w-full flex items-center justify-center text-black/50">
+                  No image
+                </div>
+              )}
+            </div>
+
+            {/* Details */}
+            <div className="p-6">
+              <h3 className="text-2xl font-semibold text-[#7C3A2E]">{name}</h3>
+
+              {displayPrice != null && (
+                <p className="mt-2 text-lg font-semibold text-black/80">
+                  ₱{Number(displayPrice).toLocaleString()}
                 </p>
+              )}
+
+              <p className="mt-4 text-sm text-black/60 leading-relaxed">
+                {product?.description || "No description available."}
+              </p>
+
+              {/* ✅ Variants as rounded rectangles */}
+              <div className="mt-6">
+                <div className="flex items-end justify-between gap-3">
+                  <p className="text-sm font-semibold text-black/70">Variants</p>
+                  {!loadingVariants && variants.length > 0 && (
+                    <p className="text-xs text-black/45">
+                      Prices
+                    </p>
+                  )}
+                </div>
+
+                {loadingVariants ? (
+                  <div className="mt-3 space-y-2">
+                    <div className="h-12 w-full rounded-xl bg-black/5 animate-pulse" />
+                    <div className="h-12 w-full rounded-xl bg-black/5 animate-pulse" />
+                    <div className="h-12 w-full rounded-xl bg-black/5 animate-pulse" />
+                  </div>
+                ) : variants.length > 0 ? (
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {variants.map((v) => {
+                      const active = String(v.id) === String(selectedVariantId);
+                      return (
+                        <button
+                          key={v.id}
+                          type="button"
+                          onClick={() => setSelectedVariantId(String(v.id))}
+                          className={[
+                            "w-full rounded-xl border px-4 py-3 text-left transition",
+                            active
+                              ? "border-[#7C3A2E] bg-[#7C3A2E]/10"
+                              : "border-black/10 bg-white hover:bg-black/5",
+                          ].join(" ")}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="font-semibold text-black/80 truncate">
+                                {v.variant_name}
+                              </p>
+                              {v.weight_kg != null && (
+                                <p className="text-xs text-black/50 mt-0.5">
+                                  {Number(v.weight_kg)} kg
+                                </p>
+                              )}
+                            </div>
+
+                            <p className="font-semibold text-[#7C3A2E] whitespace-nowrap">
+                              ₱{Number(v.price || 0).toLocaleString()}
+                            </p>
+                          </div>
+
+                          {active && (
+                            <p className="mt-2 text-xs font-semibold text-[#7C3A2E]"/>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="mt-3 rounded-xl border border-black/10 bg-white p-4 text-sm text-black/55">
+                    No variants available for this product.
+                  </div>
+                )}
               </div>
-
-              <button
-                type="button"
-                onClick={onClose}
-                className="h-10 w-10 rounded-full border border-gray-200 grid place-items-center hover:border-[#7C3A2E] hover:text-[#7C3A2E] transition"
-                aria-label="Close"
-              >
-                ✕
-              </button>
-            </div>
-
-            <p className="mt-4 text-gray-600 leading-relaxed">
-              {product.description || "Handcrafted with love and tradition."}
-            </p>
-
-            <div className="mt-6 flex items-center justify-between">
-              <p className="text-2xl font-bold text-[#7C3A2E]">Php {price}</p>
-
-              <button
-                type="button"
-                className="bg-[#7C3A2E] hover:bg-[#5e2b22] text-white px-5 py-3 rounded-full font-bold transition"
-              >
-                Add to Cart
-              </button>
-            </div>
-
-            <div className="mt-6 border-t border-gray-100 pt-4 text-sm text-gray-500">
-              Tip: connect this button later to your cart/checkout flow.
             </div>
           </div>
         </div>

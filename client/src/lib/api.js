@@ -14,7 +14,14 @@ async function http(path, options = {}) {
 }
 
 export const api = {
-  products: ({ limit = 8 } = {}) => http(`/products?limit=${limit}`),
+  products: ({ limit = 100 } = {}) => http(`/products?limit=${limit}`),
+
   artisansFeatured: () => http(`/artisans?featured=true`),
+  artisansAll: () => http(`/artisans`),
+
   team: () => http(`/team`),
+
+  // ✅ NEW
+  productVariants: (productId) => http(`/product-variants?product_id=${productId}`),
+  search: (q) => http(`/search?q=${encodeURIComponent(q || "")}`),
 };
