@@ -21,7 +21,9 @@ export const api = {
 
   team: () => http(`/team`),
 
-  // ✅ NEW
-  productVariants: (productId) => http(`/product-variants?product_id=${productId}`),
-  search: (q) => http(`/search?q=${encodeURIComponent(q || "")}`),
+  productVariants: (productId) =>
+    http(`/product-variants?product_id=${productId}`),
+
+  search: (q) =>
+    http(`/search?q=${encodeURIComponent(q || "")}`),
 };

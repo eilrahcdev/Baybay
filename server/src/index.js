@@ -41,5 +41,13 @@ app.use("/api", publicRoutes);
 ============================== */
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
-  console.log(`✅ API running on http://localhost:${port}`);
+  console.log(`Server running on ${port}`);
 });
+
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://baybay-2m9pb1ywr-eilrachs-projects.vercel.app/ "
+  ],
+  credentials: true
+}));
