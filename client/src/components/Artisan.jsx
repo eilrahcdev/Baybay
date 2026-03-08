@@ -22,11 +22,15 @@ function splitTitle(title) {
 }
 
 export default function Artisan({ artisans = [], loading = false, onViewDetails }) {
+  const fallbackImage =
+    "https://images.unsplash.com/photo-1520975693416-35a3c5b84f41?w=1600";
+
   const items = useMemo(() => {
     const list = Array.isArray(artisans) ? artisans : [];
     return list.map((a) => {
       const title = a.title || "Local Artisan";
       const meta = splitTitle(title);
+
       return {
         id: a.id ?? a.artisan_id ?? a.created_at ?? a.name,
         name: a.name || "Unknown Artisan",
@@ -36,11 +40,10 @@ export default function Artisan({ artisans = [], loading = false, onViewDetails 
         bio:
           a.bio ||
           "This artisan preserves traditional craftsmanship, passing skills from one generation to the next.",
-        image:
-          resolveImageUrl(
-            a.image_url || a.artisan_image || a.photo_url || a.avatar_url || a.image,
-            "https://images.unsplash.com/photo-1520975693416-35a3c5b84f41?w=1600"
-          ),
+        image: resolveImageUrl(
+          a.image_url || a.artisan_image || a.photo_url || a.avatar_url || a.image,
+          fallbackImage
+        ),
       };
     });
   }, [artisans]);
@@ -71,7 +74,9 @@ export default function Artisan({ artisans = [], loading = false, onViewDetails 
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#7C3A2E]/80">
             Featured Makers
           </p>
-          <h2 className="mt-2 text-3xl font-semibold text-baybay-ink sm:text-4xl">Artisan Stories</h2>
+          <h2 className="mt-2 text-3xl font-semibold text-baybay-ink sm:text-4xl">
+            Artisan Stories
+          </h2>
           <p className="mt-3 text-sm text-black/60">
             Meet the craftspeople behind Baybay&apos;s handmade collections.
           </p>
@@ -126,6 +131,12 @@ export default function Artisan({ artisans = [], loading = false, onViewDetails 
                   alt={current.name}
                   className="h-[320px] w-full object-cover sm:h-[390px] lg:h-full lg:min-h-[460px]"
                   loading="lazy"
+                  onError={(e) => {
+                    console.error("Failed artisan image:", current);
+                    if (e.currentTarget.src !== fallbackImage) {
+                      e.currentTarget.src = fallbackImage;
+                    }
+                  }}
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent p-5 text-white sm:p-6">
                   <div className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em]">

@@ -2,11 +2,13 @@ import { useMemo } from "react";
 import { resolveImageUrl } from "../lib/imageUrl";
 
 function ProductCard({ item, onQuickView }) {
-  const image =
-    resolveImageUrl(
-      item.image_url || item.product_image || item.image || item.img || item.photo_url,
-      "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1200"
-    );
+  const fallbackImage =
+    "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1200";
+
+  const image = resolveImageUrl(
+    item.image_url || item.product_image || item.image || item.img || item.photo_url,
+    fallbackImage
+  );
 
   const name = item.name || item.title || "Product";
   const description = item.description || "No description.";
@@ -14,19 +16,24 @@ function ProductCard({ item, onQuickView }) {
 
   return (
     <div
-      className="cursor-pointer overflow-hidden rounded-2xl border border-black/10 bg-white/85 shadow-[0_12px_30px_rgba(20,16,12,0.12)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(20,16,12,0.18)]"
+      className="cursor-pointer overflow-hidden rounded-2xl border border-black/10 bg-white/85 shadow-[0_12px_30px_rgba(20,16,12,0.12)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_20px_35px_rgba(20,16,12,0.16)]"
       onClick={() => onQuickView?.(item)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onQuickView?.(item)}
     >
-      {/* Responsive image */}
       <div className="relative w-full aspect-[4/3] bg-black/5">
         <img
           src={image}
           alt={name}
           loading="lazy"
           className="absolute inset-0 h-full w-full object-cover"
+          onError={(e) => {
+            console.error("Failed product image:", item, image);
+            if (e.currentTarget.src !== fallbackImage) {
+              e.currentTarget.src = fallbackImage;
+            }
+          }}
         />
       </div>
 

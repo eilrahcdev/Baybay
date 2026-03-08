@@ -6,13 +6,15 @@ import { resolveImageUrl } from "../lib/imageUrl";
 export default function ProductQuickViewModal({ product, onClose }) {
   if (!product) return null;
 
+  const fallbackImage =
+    "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1200";
+
   const productId = product?.id;
 
   const [variants, setVariants] = useState([]);
   const [loadingVariants, setLoadingVariants] = useState(false);
   const [selectedVariantId, setSelectedVariantId] = useState("");
 
-  // Lock page scroll while modal is open.
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -21,7 +23,6 @@ export default function ProductQuickViewModal({ product, onClose }) {
     };
   }, []);
 
-  // Load variants when modal opens.
   useEffect(() => {
     let alive = true;
 
@@ -37,7 +38,6 @@ export default function ProductQuickViewModal({ product, onClose }) {
         const list = Array.isArray(data) ? data : [];
         setVariants(list);
 
-        // Select first variant by default.
         if (list.length) setSelectedVariantId(String(list[0].id));
         else setSelectedVariantId("");
       } catch (e) {
@@ -65,15 +65,13 @@ export default function ProductQuickViewModal({ product, onClose }) {
   const name = product?.name || product?.title || "Product";
   const img = resolveImageUrl(
     product?.image_url || product?.product_image || product?.image || product?.img || product?.photo_url,
-    "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1200"
+    fallbackImage
   );
 
-  // Show selected variant price, fallback to product price.
   const displayPrice = selectedVariant?.price ?? product?.price ?? null;
 
   return (
     <div className="fixed inset-0 z-[9999]">
-      {/* Backdrop */}
       <button
         type="button"
         aria-label="Close modal"
@@ -81,10 +79,8 @@ export default function ProductQuickViewModal({ product, onClose }) {
         className="absolute inset-0 bg-black/45 backdrop-blur-sm"
       />
 
-      {/* Modal Card */}
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div className="relative w-full max-w-3xl rounded-2xl bg-white shadow-2xl overflow-hidden">
-          {/* Close */}
           <button
             type="button"
             onClick={onClose}
@@ -95,10 +91,19 @@ export default function ProductQuickViewModal({ product, onClose }) {
           </button>
 
           <div className="grid grid-cols-1 md:grid-cols-2">
-            {/* Image */}
             <div className="bg-black/5">
               {img ? (
-                <img src={img} alt={name} className="h-72 md:h-full w-full object-cover" />
+                <img
+                  src={img}
+                  alt={name}
+                  className="h-72 md:h-full w-full object-cover"
+                  onError={(e) => {
+                    console.error("Failed modal image:", product, img);
+                    if (e.currentTarget.src !== fallbackImage) {
+                      e.currentTarget.src = fallbackImage;
+                    }
+                  }}
+                />
               ) : (
                 <div className="h-72 md:h-full w-full flex items-center justify-center text-black/50">
                   No image
@@ -106,7 +111,6 @@ export default function ProductQuickViewModal({ product, onClose }) {
               )}
             </div>
 
-            {/* Details */}
             <div className="p-6">
               <h3 className="text-2xl font-semibold text-[#7C3A2E]">{name}</h3>
 
@@ -120,14 +124,11 @@ export default function ProductQuickViewModal({ product, onClose }) {
                 {product?.description || "No description available."}
               </p>
 
-              {/* Variant list */}
               <div className="mt-6">
                 <div className="flex items-end justify-between gap-3">
                   <p className="text-sm font-semibold text-black/70">Variants</p>
                   {!loadingVariants && variants.length > 0 && (
-                    <p className="text-xs text-black/45">
-                      Prices
-                    </p>
+                    <p className="text-xs text-black/45">Prices</p>
                   )}
                 </div>
 
@@ -143,8 +144,9 @@ export default function ProductQuickViewModal({ product, onClose }) {
                       const active = String(v.id) === String(selectedVariantId);
                       const variantImage = resolveImageUrl(
                         v?.image_url || v?.variant_image || v?.image || v?.img || v?.photo_url || img,
-                        img
+                        img || fallbackImage
                       );
+
                       return (
                         <button
                           key={v.id}
@@ -164,25 +166,28 @@ export default function ProductQuickViewModal({ product, onClose }) {
                                 alt={v.variant_name || "Variant"}
                                 className="h-12 w-12 shrink-0 rounded-lg object-cover border border-black/10 bg-black/5"
                                 loading="lazy"
+                                onError={(e) => {
+                                  if (e.currentTarget.src !== fallbackImage) {
+                                    e.currentTarget.src = fallbackImage;
+                                  }
+                                }}
                               />
-                              <p className="font-semibold text-black/80 truncate">
-                                {v.variant_name}
-                              </p>
-                              {v.weight_kg != null && (
-                                <p className="text-xs text-black/50 mt-0.5">
-                                  {Number(v.weight_kg)} kg
+                              <div className="min-w-0">
+                                <p className="font-semibold text-black/80 truncate">
+                                  {v.variant_name}
                                 </p>
-                              )}
+                                {v.weight_kg != null && (
+                                  <p className="text-xs text-black/50 mt-0.5">
+                                    {Number(v.weight_kg)} kg
+                                  </p>
+                                )}
+                              </div>
                             </div>
 
                             <p className="font-semibold text-[#7C3A2E] whitespace-nowrap">
                               ₱{Number(v.price || 0).toLocaleString()}
                             </p>
                           </div>
-
-                          {active && (
-                            <p className="mt-2 text-xs font-semibold text-[#7C3A2E]"/>
-                          )}
                         </button>
                       );
                     })}

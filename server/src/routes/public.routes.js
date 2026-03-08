@@ -21,13 +21,36 @@ function pickImageValue(row, keys = []) {
   return null;
 }
 
+function getBaseUrl(req) {
+  const explicitBaseUrl = String(process.env.PUBLIC_SERVER_URL || "").trim();
+  if (explicitBaseUrl) {
+    return explicitBaseUrl.replace(/\/+$/, "");
+  }
+
+  const forwardedProto = String(req.headers["x-forwarded-proto"] || "")
+    .split(",")[0]
+    .trim();
+
+  const protocol = forwardedProto || req.protocol || "http";
+  const host = req.get("host");
+
+  if (!host) return "";
+  return `${protocol}://${host}`;
+}
+
 function toPublicUrl(req, value) {
   const raw = String(value || "").trim();
   if (!raw) return null;
-  if (/^https?:\/\//i.test(raw) || raw.startsWith("data:")) return raw;
+
+  if (/^https?:\/\//i.test(raw) || raw.startsWith("data:")) {
+    return raw;
+  }
 
   const pathValue = raw.startsWith("/") ? raw : `/${raw}`;
-  return encodeURI(pathValue);
+  const encodedPath = encodeURI(pathValue);
+  const baseUrl = getBaseUrl(req);
+
+  return baseUrl ? `${baseUrl}${encodedPath}` : encodedPath;
 }
 
 function normalizeProduct(req, doc) {
@@ -40,6 +63,7 @@ function normalizeProduct(req, doc) {
     "photo_url",
   ]);
   const imageUrl = toPublicUrl(req, imageValue);
+
   return {
     ...row,
     image_url: imageUrl,
@@ -58,6 +82,7 @@ function normalizeArtisan(req, doc) {
     "avatar_url",
   ]);
   const imageUrl = toPublicUrl(req, imageValue);
+
   return {
     ...row,
     image_url: imageUrl,
@@ -74,6 +99,7 @@ function normalizeTeam(req, doc) {
     "avatar_url",
   ]);
   const imageUrl = toPublicUrl(req, imageValue);
+
   return {
     ...row,
     team_image: imageUrl,
@@ -85,10 +111,6 @@ function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/**
- * POST /api/newsletter/subscribe
- * body: { email }
- */
 router.post("/newsletter/subscribe", async (req, res) => {
   const parsed = newsletterSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -100,6 +122,7 @@ router.post("/newsletter/subscribe", async (req, res) => {
   try {
     const { newsletterSubscribers } = await getCollections();
     const now = new Date();
+
     await newsletterSubscribers.updateOne(
       { email },
       {
@@ -121,9 +144,6 @@ router.post("/newsletter/subscribe", async (req, res) => {
   }
 });
 
-/**
- * GET /api/products?limit=8
- */
 router.get("/products", async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit || "8", 10), 200);
@@ -135,9 +155,6 @@ router.get("/products", async (req, res) => {
   }
 });
 
-/**
- * GET /api/artisans?featured=true
- */
 router.get("/artisans", async (req, res) => {
   try {
     const featured = String(req.query.featured || "").toLowerCase() === "true";
@@ -145,7 +162,6 @@ router.get("/artisans", async (req, res) => {
     const filter = featured ? { is_featured: true } : {};
     let rows = await artisans.find(filter).sort({ created_at: -1 }).toArray();
 
-    // Fallback: if no featured records exist, return recent artisans so UI still works.
     if (featured && (!rows || rows.length === 0)) {
       rows = await artisans.find({}).sort({ created_at: -1 }).limit(8).toArray();
     }
@@ -156,9 +172,6 @@ router.get("/artisans", async (req, res) => {
   }
 });
 
-/**
- * GET /api/product-variants?product_id=36
- */
 router.get("/product-variants", async (req, res) => {
   try {
     const productIdRaw = String(req.query.product_id || "").trim();
@@ -182,7 +195,6 @@ router.get("/product-variants", async (req, res) => {
     const rows = await productVariants.find(filter).sort({ weight_kg: 1 }).toArray();
     const variants = (rows || []).map(withId);
 
-    // Match Team-style image behavior: if variant has no image, inherit product image.
     const productIds = Array.from(
       new Set(
         variants
@@ -192,6 +204,7 @@ router.get("/product-variants", async (req, res) => {
     );
 
     const productImageById = new Map();
+
     if (productIds.length > 0) {
       const { products } = await getCollections();
       const numericIds = productIds
@@ -218,6 +231,7 @@ router.get("/product-variants", async (req, res) => {
       for (const product of productRows || []) {
         const productId = String(product?.id || "").trim();
         if (!productId) continue;
+
         const imageValue = pickImageValue(product, [
           "image_url",
           "product_image",
@@ -225,8 +239,10 @@ router.get("/product-variants", async (req, res) => {
           "img",
           "photo_url",
         ]);
+
         const imageUrl = toPublicUrl(req, imageValue);
         if (!imageUrl) continue;
+
         productImageById.set(productId, imageUrl);
       }
     }
@@ -237,8 +253,12 @@ router.get("/product-variants", async (req, res) => {
           req,
           pickImageValue(variant, ["image_url", "image", "img", "photo_url"])
         );
-        const inheritedImage = productImageById.get(String(variant?.product_id || "").trim()) || null;
+
+        const inheritedImage =
+          productImageById.get(String(variant?.product_id || "").trim()) || null;
+
         const imageUrl = ownImage || inheritedImage;
+
         return {
           ...variant,
           image_url: imageUrl,
@@ -251,9 +271,6 @@ router.get("/product-variants", async (req, res) => {
   }
 });
 
-/**
- * GET /api/team
- */
 router.get("/team", async (req, res) => {
   try {
     const { team } = await getCollections();
@@ -264,9 +281,6 @@ router.get("/team", async (req, res) => {
   }
 });
 
-/**
- * GET /api/tiktok-videos?featured=true&active=true
- */
 router.get("/tiktok-videos", async (req, res) => {
   try {
     const onlyFeatured = String(req.query.featured || "").toLowerCase() === "true";
@@ -285,10 +299,6 @@ router.get("/tiktok-videos", async (req, res) => {
   }
 });
 
-/**
- * GET /api/search?q=keyword
- * Case-insensitive partial-word search for products and artisans.
- */
 router.get("/search", async (req, res) => {
   try {
     const raw = String(req.query.q || "").trim();
@@ -308,6 +318,7 @@ router.get("/search", async (req, res) => {
 
     const productOr = [];
     const artisanOr = [];
+
     for (const word of terms) {
       const regex = new RegExp(escapeRegex(word), "i");
       productOr.push({ name: regex }, { description: regex }, { category: regex });
@@ -315,6 +326,7 @@ router.get("/search", async (req, res) => {
     }
 
     const { products, artisans } = await getCollections();
+
     const [productRows, artisanRows] = await Promise.all([
       products
         .find(
