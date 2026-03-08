@@ -14,10 +14,10 @@ export default function ResetPassword() {
   const [error, setError] = useState("");
   const [ok, setOk] = useState(false);
 
-  // Ensure the user is in recovery session
+  // Keep listener for recovery flow events.
   useEffect(() => {
     supabase.auth.onAuthStateChange((event) => {
-      // event can be PASSWORD_RECOVERY depending on setup
+      // Event may be PASSWORD_RECOVERY depending on setup.
     });
   }, []);
 
@@ -35,7 +35,7 @@ export default function ResetPassword() {
 
       setOk(true);
 
-      // Optional: sign out and go to login
+      // Optional: sign out and redirect to login.
       setTimeout(async () => {
         await supabase.auth.signOut();
         navigate("/login");

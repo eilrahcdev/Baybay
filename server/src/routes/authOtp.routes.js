@@ -24,7 +24,7 @@ const resetSchema = z.object({
 });
 
 function generateOtp() {
-  return String(Math.floor(100000 + Math.random() * 900000)); // 6 digits
+  return String(Math.floor(100000 + Math.random() * 900000)); // 6-digit OTP
 }
 
 function ttlDate() {
@@ -32,7 +32,7 @@ function ttlDate() {
   return new Date(Date.now() + minutes * 60 * 1000).toISOString();
 }
 
-// 1) Request OTP (verify/reset)
+// Step 1: request OTP for verify/reset.
 router.post("/auth/request-otp", async (req, res) => {
   const parsed = requestSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: "Invalid request" });
@@ -40,7 +40,7 @@ router.post("/auth/request-otp", async (req, res) => {
   const email = parsed.data.email.toLowerCase();
   const purpose = parsed.data.purpose;
 
-  // Optional: for reset, ensure the user exists in Supabase Auth
+  // For reset, make sure the email exists in Supabase Auth.
   if (purpose === "reset") {
     const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 2000 });
     if (error) return res.status(500).json({ message: error.message });
@@ -52,7 +52,7 @@ router.post("/auth/request-otp", async (req, res) => {
   const otp_hash = await bcrypt.hash(otp, 10);
   const expires_at = ttlDate();
 
-  // Invalidate old unconsumed OTPs for same email+purpose
+  // Invalidate older unused OTPs for this email and purpose.
   await supabaseAdmin
     .from("email_otps")
     .update({ consumed_at: new Date().toISOString() })
@@ -75,7 +75,7 @@ router.post("/auth/request-otp", async (req, res) => {
   return res.json({ ok: true, message: "OTP sent." });
 });
 
-// 2) Verify OTP (for verify/reset confirmation)
+// Step 2: verify OTP for verify/reset.
 router.post("/auth/verify-otp", async (req, res) => {
   const parsed = verifySchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: "Invalid request" });
@@ -101,7 +101,7 @@ router.post("/auth/verify-otp", async (req, res) => {
     return res.status(400).json({ message: "OTP expired. Request a new one." });
   }
 
-  // throttle attempts
+  // Limit OTP attempts.
   if ((record.attempts || 0) >= 5) {
     return res.status(429).json({ message: "Too many attempts. Request a new OTP." });
   }
@@ -115,18 +115,18 @@ router.post("/auth/verify-otp", async (req, res) => {
 
   if (!ok) return res.status(400).json({ message: "Invalid OTP." });
 
-  // Mark consumed
+  // Mark OTP as used.
   await supabaseAdmin
     .from("email_otps")
     .update({ consumed_at: new Date().toISOString() })
     .eq("id", record.id);
 
-  // If purpose is verify, you can mark profile as verified (custom column)
-  // (You need to add email_verified boolean column in profiles if you want.)
+  // If purpose is "verify", you can mark profile as email-verified.
+  // Add an email_verified boolean column in profiles if needed.
   return res.json({ ok: true, message: "OTP verified." });
 });
 
-// 3) Reset password using OTP + new password
+// Step 3: reset password with OTP and new password.
 router.post("/auth/reset-password", async (req, res) => {
   const parsed = resetSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: "Invalid request" });
@@ -135,7 +135,7 @@ router.post("/auth/reset-password", async (req, res) => {
   const otp = parsed.data.otp;
   const newPassword = parsed.data.newPassword;
 
-  // Find latest RESET otp
+  // Use the latest unused reset OTP.
   const { data: rows, error } = await supabaseAdmin
     .from("email_otps")
     .select("*")
@@ -166,14 +166,14 @@ router.post("/auth/reset-password", async (req, res) => {
 
   if (!ok) return res.status(400).json({ message: "Invalid OTP." });
 
-  // Consume OTP
+  // Mark OTP as used.
   await supabaseAdmin
     .from("email_otps")
     .update({ consumed_at: new Date().toISOString() })
     .eq("id", record.id);
 
-  // Update password in Supabase Auth
-  // Find user by email
+  // Update password in Supabase Auth.
+  // Find the user by email first.
   const { data: users, error: listErr } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 2000 });
   if (listErr) return res.status(500).json({ message: listErr.message });
 

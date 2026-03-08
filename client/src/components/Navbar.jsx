@@ -63,7 +63,7 @@ export default function Navbar() {
 
   const [logoutOpen, setLogoutOpen] = useState(false);
 
-  // ✅ Search state
+  // Search state
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -76,7 +76,7 @@ export default function Navbar() {
   const boxRef = useRef(null);
   const debounceRef = useRef(null);
 
-  // 🔥 Listen to auth state
+  // Listen to auth state.
   useEffect(() => {
     let alive = true;
 
@@ -98,7 +98,7 @@ export default function Navbar() {
     };
   }, []);
 
-  // Close search dropdown when clicking outside
+  // Close search dropdown when clicking outside.
   useEffect(() => {
     function onDocClick(e) {
       if (!boxRef.current) return;
@@ -110,16 +110,16 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
 
-  // Close dropdown on route change
+  // Close search dropdown on route change.
   useEffect(() => {
     setSearchOpen(false);
   }, [location.pathname]);
 
-  // 🔎 Debounced search
+  // Debounced search.
   useEffect(() => {
     const q = query.trim();
 
-    // If empty, reset
+    // Reset state when query is empty.
     if (!q) {
       setResults({ products: [], artisans: [] });
       setNoResults(false);
@@ -171,7 +171,7 @@ export default function Navbar() {
   };
 
   const goToProductSearch = (q) => {
-    // ✅ go to products page with a search query
+    // Navigate to Products page with current search query.
     navigate(`/products?search=${encodeURIComponent(q)}`);
     setSearchOpen(false);
   };
@@ -213,7 +213,7 @@ export default function Navbar() {
 
           {/* Right Section */}
           <div className="flex items-center gap-3 relative">
-            {/* ✅ Search with dropdown */}
+            {/* Search input with dropdown */}
             <div className="relative hidden lg:block" ref={boxRef}>
               <input
                 value={query}
@@ -349,7 +349,7 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* IF NOT LOGGED IN */}
+            {/* Guest actions */}
             {!user && (
               <>
                 <Link
@@ -368,7 +368,7 @@ export default function Navbar() {
               </>
             )}
 
-            {/* IF LOGGED IN */}
+            {/* Logged-in actions */}
             {user && (
               <div className="relative">
                 <button

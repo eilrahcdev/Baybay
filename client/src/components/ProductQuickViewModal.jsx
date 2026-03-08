@@ -11,7 +11,7 @@ export default function ProductQuickViewModal({ product, onClose }) {
   const [loadingVariants, setLoadingVariants] = useState(false);
   const [selectedVariantId, setSelectedVariantId] = useState("");
 
-  // Lock scroll while modal open
+  // Lock page scroll while modal is open.
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -20,7 +20,7 @@ export default function ProductQuickViewModal({ product, onClose }) {
     };
   }, []);
 
-  // Load variants when modal opens
+  // Load variants when modal opens.
   useEffect(() => {
     let alive = true;
 
@@ -36,7 +36,7 @@ export default function ProductQuickViewModal({ product, onClose }) {
         const list = Array.isArray(data) ? data : [];
         setVariants(list);
 
-        // Default select first variant
+        // Select first variant by default.
         if (list.length) setSelectedVariantId(String(list[0].id));
         else setSelectedVariantId("");
       } catch (e) {
@@ -64,7 +64,7 @@ export default function ProductQuickViewModal({ product, onClose }) {
   const name = product?.name || product?.title || "Product";
   const img = product?.image_url || product?.image || product?.img;
 
-  // If variants exist, show selected variant price; else show product.price
+  // Show selected variant price, fallback to product price.
   const displayPrice = selectedVariant?.price ?? product?.price ?? null;
 
   return (
@@ -116,7 +116,7 @@ export default function ProductQuickViewModal({ product, onClose }) {
                 {product?.description || "No description available."}
               </p>
 
-              {/* ✅ Variants as rounded rectangles */}
+              {/* Variant list */}
               <div className="mt-6">
                 <div className="flex items-end justify-between gap-3">
                   <p className="text-sm font-semibold text-black/70">Variants</p>

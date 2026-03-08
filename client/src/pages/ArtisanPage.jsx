@@ -102,12 +102,12 @@ if (loadingAuth || !user) return null;
 
   return (
     <>
-      {/* Removed Navbar */}
+      {/* Navbar is hidden on this page. */}
 
       <section className="py-10 sm:py-14 bg-[#FDF8F4] min-h-screen">
         <div className="container">
 
-          {/* ✅ Rounded Rectangle Back Button */}
+          {/* Back button */}
           <div className="mb-6">
             <Link
               to="/"
@@ -139,7 +139,7 @@ if (loadingAuth || !user) return null;
             </div>
           ) : (
             <>
-              {/* Artisan Card */}
+              {/* Artisan card */}
               <div className="rounded-3xl bg-white border border-black/10 shadow-soft overflow-hidden">
                 <div className="grid lg:grid-cols-2">
                   <div className="bg-black/5">
@@ -164,7 +164,7 @@ if (loadingAuth || !user) return null;
                         "This artisan preserves traditional craftsmanship, passing skills from one generation to the next."}
                     </p>
 
-                    {/* Facebook Button */}
+                    {/* Facebook link */}
                     <div className="mt-6">
                       {facebookUrl ? (
                         <a
@@ -185,7 +185,7 @@ if (loadingAuth || !user) return null;
                 </div>
               </div>
 
-              {/* Related Products */}
+              {/* Related products */}
               <div className="mt-10">
                 <div className="flex items-end justify-between gap-3">
                   <h2 className="text-xl sm:text-2xl font-bold text-[#7C3A2E]">
@@ -213,7 +213,7 @@ if (loadingAuth || !user) return null;
         </div>
       </section>
 
-      {/* Removed Footer */}
+      {/* Footer is hidden on this page. */}
 
       {quickViewProduct && (
         <ProductQuickViewModal

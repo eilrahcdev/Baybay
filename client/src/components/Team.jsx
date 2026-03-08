@@ -4,8 +4,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 export default function TeamCarousel({ team = [], loading = false }) {
   const slides = useMemo(() => {
     const list = Array.isArray(team) ? team : [];
-    // You said you inserted the whole team image, not per member.
-    // So each row can be a slide.
+    // Data stores one full team image per row.
+    // Treat each row as one slide.
     return list
       .map((t) => ({
         id: t.id,
@@ -100,7 +100,7 @@ export default function TeamCarousel({ team = [], loading = false }) {
                     <ChevronRight size={18} />
                   </button>
 
-                  {/* Dots */}
+                  {/* Slide dots */}
                   <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
                     {slides.map((s, i) => (
                       <button

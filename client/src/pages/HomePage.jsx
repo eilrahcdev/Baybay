@@ -25,11 +25,11 @@ export default function HomePage({
 
   const [quickViewProduct, setQuickViewProduct] = useState(null);
 
-  // ✅ Auth gate modal state (ONLY here)
+  // Auth gate modal state is managed only in HomePage.
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [redirectTo, setRedirectTo] = useState(null);
 
-  // ✅ fetch featured artisans from DB
+  // Load featured artisans from the API.
   const [artisans, setArtisans] = useState([]);
   const [loadingArtisans, setLoadingArtisans] = useState(true);
 
@@ -56,20 +56,20 @@ export default function HomePage({
     };
   }, []);
 
-  // ✅ If we were redirected back home due to auth gate, pop the modal HERE
+  // If redirected here by auth gate, reopen the modal.
   useEffect(() => {
     const gate = location.state?.authGate;
     if (!gate?.from) return;
 
-    // Open modal and remember intended path
+    // Open modal and remember target path.
     setRedirectTo(gate.from);
     setAuthModalOpen(true);
 
-    // Clear the state so it doesn't reopen on refresh/back
+    // Clear router state to avoid reopening on refresh/back.
     navigate("/", { replace: true, state: {} });
   }, [location.state, navigate]);
 
-  // ✅ helper: gate navigation from homepage clicks
+  // Helper to gate protected navigation from HomePage.
   const goProtected = (path) => {
     if (!user) {
       setRedirectTo(path);
@@ -100,7 +100,7 @@ export default function HomePage({
 
       <Team team={team} loading={loadingTeam} />
 
-      {/* ✅ Auth modal is ONLY rendered on HomePage */}
+      {/* Auth modal is rendered only on HomePage. */}
       <AuthGateModal
         open={authModalOpen}
         title="Sign up or log in first to continue"

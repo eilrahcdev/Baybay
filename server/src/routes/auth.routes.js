@@ -17,19 +17,19 @@ router.post("/signup", async (req, res) => {
       return res.status(400).json({ message: "full_name, email, password are required" });
     }
 
-    // Create auth user
+    // Create the auth user.
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name }, // saved to raw_user_meta_data; trigger will use this
+        data: { full_name }, // Stored in user metadata for the trigger.
       },
     });
 
     if (error) return res.status(400).json({ message: error.message });
 
-    // Optional: ensure profile exists (trigger should handle this)
-    // If you want to force it server-side (safe via service role):
+    // Keep profile in sync on signup.
+    // The DB trigger should already handle this.
     if (data?.user?.id) {
       await supabaseAdmin
         .from("profiles")
@@ -39,7 +39,7 @@ router.post("/signup", async (req, res) => {
     return res.status(201).json({
       message: "Signup successful",
       user: data.user,
-      session: data.session, // may be null if email confirmation is enabled
+      session: data.session, // Can be null when email confirmation is enabled.
     });
   } catch (e) {
     return res.status(500).json({ message: "Signup failed" });
@@ -68,7 +68,7 @@ router.post("/login", async (req, res) => {
     return res.json({
       message: "Login successful",
       user: data.user,
-      session: data.session, // contains access_token
+      session: data.session, // Contains the access token.
     });
   } catch (e) {
     return res.status(500).json({ message: "Login failed" });
@@ -81,7 +81,7 @@ router.post("/login", async (req, res) => {
  */
 router.get("/me", requireAuth, async (req, res) => {
   try {
-    // Fetch profile using admin (or user token + RLS)
+    // Load profile data for the current user.
     const userId = req.user.id;
 
     const { data: profile, error } = await supabaseAdmin

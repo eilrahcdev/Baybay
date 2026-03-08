@@ -9,11 +9,11 @@ export default function AuthCallback() {
     let alive = true;
 
     async function run() {
-      // For email verification / magic link flows:
-      // Supabase puts code in URL. This exchanges it for a session.
+      // For email verification and magic links:
+      // Supabase puts a code in the URL, then we exchange it for a session.
       const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
 
-      // Regardless, go home (or login if something failed)
+      // Redirect after callback handling.
       if (!alive) return;
 
       if (error) {

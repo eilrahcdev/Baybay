@@ -10,7 +10,7 @@ export default function ProtectedRoute({ children }) {
 
   const [open, setOpen] = useState(false);
 
-  // If not logged in, show the modal
+  // Show the modal when user is not logged in.
   useEffect(() => {
     if (!loading && !user) {
       setOpen(true);
@@ -19,7 +19,7 @@ export default function ProtectedRoute({ children }) {
     }
   }, [loading, user]);
 
-  // While checking session, show a loader
+  // Show loader while session is being checked.
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-6">
@@ -31,13 +31,13 @@ export default function ProtectedRoute({ children }) {
     );
   }
 
-  // If authenticated, allow access
+  // Allow access for authenticated users.
   if (user) return children;
 
-  // If not authenticated, block page and show modal
+  // Block protected page for guests and show the modal.
   return (
     <>
-      {/* Optional: subtle blocked background */}
+      {/* Simple blocked-page background */}
       <div className="min-h-screen bg-[#FDF8F4]" />
 
       <AuthGateModal
@@ -46,7 +46,7 @@ export default function ProtectedRoute({ children }) {
         message="You must be logged in to view artisan details and all products."
         onClose={() => {
           setOpen(false);
-          // stay on current page (the previous page remains, because navigation didn’t happen)
+          // Send user back home after closing the modal.
           navigate("/", { replace: true });
         }}
         onLogin={() => {

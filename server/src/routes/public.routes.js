@@ -5,7 +5,7 @@ const router = Router();
 
 /**
  * GET /api/products?limit=8
- * Reads from Supabase table: products
+ * Reads from the Supabase "products" table.
  */
 router.get("/products", async (req, res) => {
   try {
@@ -47,8 +47,8 @@ router.get("/artisans", async (req, res) => {
 });
 
 /**
- * ✅ GET /api/product-variants?product_id=36
- * Reads from Supabase table: product_variants
+ * GET /api/product-variants?product_id=36
+ * Reads from the Supabase "product_variants" table.
  */
 router.get("/product-variants", async (req, res) => {
   try {
@@ -92,7 +92,7 @@ router.get("/team", async (req, res) => {
 
 /**
  * GET /api/search?q=keyword
- * Case-insensitive partial word search for products + artisans
+ * Case-insensitive partial-word search for products and artisans.
  */
 router.get("/search", async (req, res) => {
   try {
@@ -101,10 +101,10 @@ router.get("/search", async (req, res) => {
       return res.json({ products: [], artisans: [] });
     }
 
-    // Normalize spaces + lowercase
+    // Normalize spacing and lowercase.
     const normalized = raw.replace(/\s+/g, " ").toLowerCase();
 
-    // Split into words (minimum 2 characters)
+    // Split into words and keep terms with at least 2 characters.
     const terms = normalized
       .split(" ")
       .map((t) => t.trim())
@@ -116,7 +116,7 @@ router.get("/search", async (req, res) => {
 
     const esc = (s) => s.replaceAll(",", "%2C");
 
-    // ---------- PRODUCTS SEARCH ----------
+    // Build product filters.
     const productFilters = [];
     for (const word of terms) {
       const like = esc(`%${word}%`);
@@ -125,7 +125,7 @@ router.get("/search", async (req, res) => {
       productFilters.push(`category.ilike.${like}`);
     }
 
-    // ---------- ARTISANS SEARCH ----------
+    // Build artisan filters.
     const artisanFilters = [];
     for (const word of terms) {
       const like = esc(`%${word}%`);

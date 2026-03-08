@@ -11,7 +11,7 @@ import Login from "./pages/LoginPage";
 import Signup from "./pages/SignupPage";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
-import AuthCallback from "./pages/AuthCallback"; // if you have this file
+import AuthCallback from "./pages/AuthCallback"; // Route for email link callbacks.
 
 import ProtectedRoute from "./auth/ProtectedRoute";
 
@@ -81,7 +81,7 @@ export default function App() {
         }
       />
 
-      {/* ✅ PROTECTED */}
+      {/* Protected routes */}
       <Route
         path="/products"
         element={
@@ -91,7 +91,7 @@ export default function App() {
         }
       />
 
-      {/* ✅ PROTECTED */}
+      {/* Protected routes */}
       <Route
         path="/artisans/:artisanId"
         element={
@@ -101,13 +101,13 @@ export default function App() {
         }
       />
 
-      {/* Auth */}
+      {/* Auth routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 
-      {/* ✅ If you use email link callbacks */}
+      {/* Email link callback route */}
       <Route path="/auth/callback" element={<AuthCallback />} />
     </Routes>
   );

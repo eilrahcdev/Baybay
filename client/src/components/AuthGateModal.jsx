@@ -22,7 +22,7 @@ export default function AuthGateModal({
       {/* Modal */}
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden border border-black/10">
-          {/* X */}
+          {/* Close button */}
           <button
             type="button"
             onClick={onClose}

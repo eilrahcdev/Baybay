@@ -7,7 +7,7 @@ function getInitials(fullNameOrEmail) {
   const v = (fullNameOrEmail || "").trim();
   if (!v) return "U";
 
-  // If it's an email, use before @
+  // If this looks like an email, use the part before "@".
   const base = v.includes("@") ? v.split("@")[0] : v;
 
   const parts = base

@@ -7,10 +7,10 @@ export function useReveal() {
   useEffect(() => {
     const elements = Array.from(document.querySelectorAll(".reveal-section"));
 
-    // If no reveal sections, nothing to do
+    // Stop early if there are no reveal sections.
     if (!elements.length) return;
 
-    // Reset reveal state when navigating so sections can animate again
+    // Reset state on route change so animation can run again.
     elements.forEach((el) => {
       el.classList.remove("is-visible");
     });
@@ -20,7 +20,7 @@ export function useReveal() {
         for (const entry of entries) {
           if (entry.isIntersecting) {
             entry.target.classList.add("is-visible");
-            observer.unobserve(entry.target); // reveal once per navigation
+            observer.unobserve(entry.target); // Reveal once per route visit.
           }
         }
       },
@@ -32,7 +32,7 @@ export function useReveal() {
 
     elements.forEach((el) => observer.observe(el));
 
-    // Cleanup when route changes/unmounts
+    // Clean up observer on route change/unmount.
     return () => observer.disconnect();
   }, [location.pathname]);
 }

@@ -13,7 +13,7 @@ export default function ProductsPage({ categories = {}, loading = false }) {
 
   const [quickViewProduct, setQuickViewProduct] = useState(null);
 
-  // ✅ If not logged in, bounce to homepage and let homepage show the modal
+  // If user is not logged in, redirect to Home and open the auth modal there.
   useEffect(() => {
     if (loadingAuth) return;
     if (!user) {
@@ -33,7 +33,7 @@ export default function ProductsPage({ categories = {}, loading = false }) {
     ];
   }, [categories]);
 
-  // While redirecting / checking auth, render nothing (prevents flicker)
+  // Render nothing while checking auth or redirecting.
   if (loadingAuth || !user) return null;
 
   return (

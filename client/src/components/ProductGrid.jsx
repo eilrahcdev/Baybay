@@ -19,7 +19,7 @@ function ProductCard({ item, onQuickView }) {
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onQuickView?.(item)}
     >
-      {/* ✅ Responsive image */}
+      {/* Responsive image */}
       <div className="relative w-full aspect-[4/3] bg-black/5">
         <img
           src={image}

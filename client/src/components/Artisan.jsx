@@ -6,7 +6,7 @@ export default function Artisan({ artisans = [], loading = false }) {
   const items = useMemo(() => {
     const list = Array.isArray(artisans) ? artisans : [];
     return list.map((a) => ({
-      // Prefer real id; fallback to created_at; final fallback name
+      // Use stable ID, then fallback fields if needed.
       id: a.id ?? a.artisan_id ?? a.created_at ?? a.name,
       name: a.name || "—",
       title: a.title || "Local Artisan",
@@ -65,7 +65,7 @@ export default function Artisan({ artisans = [], loading = false }) {
           </div>
         ) : (
           <div className="relative rounded-3xl bg-white border border-black/10 shadow-soft overflow-hidden">
-            {/* Manual Controls */}
+            {/* Manual controls */}
             {items.length > 1 && (
               <>
                 <button
@@ -112,7 +112,7 @@ export default function Artisan({ artisans = [], loading = false }) {
                   {current.bio}
                 </p>
 
-                {/* ✅ View details button */}
+                {/* View details button */}
                 <div className="mt-6">
                   <Link
                     to={`/artisans/${encodeURIComponent(String(current.id))}`}
@@ -123,7 +123,7 @@ export default function Artisan({ artisans = [], loading = false }) {
                   </Link>
                 </div>
 
-                {/* Dots */}
+                {/* Slide dots */}
                 {items.length > 1 && (
                   <div className="mt-8 flex gap-2">
                     {items.map((a, i) => (
