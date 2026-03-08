@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --baybay-primary: #7c3a2e;
+  --baybay-primary-dark: #5e2b22;
+  --baybay-surface: rgba(255, 255, 255, 0.78);
+  --baybay-border: rgba(17, 24, 39, 0.12);
+}
+
 /* Base styles */
 @layer base {
   html,
@@ -15,7 +22,11 @@
   }
 
   body {
-    @apply bg-white text-gray-800 font-body;
+    @apply text-gray-800 font-body;
+    background:
+      radial-gradient(circle at 12% 0%, rgba(124, 58, 46, 0.14), transparent 34%),
+      radial-gradient(circle at 88% 8%, rgba(196, 138, 126, 0.2), transparent 38%),
+      linear-gradient(180deg, #fff9f4 0%, #ffffff 48%, #fffaf7 100%);
     /* Prevent accidental horizontal scroll. */
     overflow-x: hidden;
     text-rendering: optimizeLegibility;
@@ -66,9 +77,20 @@
     @apply mt-2 text-sm sm:text-base text-black/60;
   }
 
+  .surface-card {
+    @apply rounded-3xl border shadow-[0_20px_60px_rgba(33,20,16,0.12)];
+    background: var(--baybay-surface);
+    border-color: var(--baybay-border);
+    backdrop-filter: blur(10px);
+  }
+
+  .page-shell {
+    @apply relative min-h-screen;
+  }
+
   /* Navigation */
   .nav-link {
-    @apply text-white/90 hover:text-orange-200 font-medium tracking-wide transition;
+    @apply font-medium tracking-wide text-white/85 transition hover:bg-white/10 hover:text-white;
   }
 
   /* Shared nav search input style. */

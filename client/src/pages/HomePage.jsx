@@ -39,11 +39,22 @@ export default function HomePage({
     async function loadArtisans() {
       try {
         setLoadingArtisans(true);
-        const a = await api.artisansFeatured();
+        const featured = await api.artisansFeatured();
         if (!alive) return;
-        setArtisans(Array.isArray(a) ? a : []);
+
+        const featuredList = Array.isArray(featured) ? featured : [];
+        if (featuredList.length > 0) {
+          setArtisans(featuredList);
+          return;
+        }
+
+        const all = await api.artisansAll();
+        if (!alive) return;
+        setArtisans(Array.isArray(all) ? all.slice(0, 8) : []);
       } catch (e) {
         console.error(e);
+        if (!alive) return;
+        setArtisans([]);
       } finally {
         if (!alive) return;
         setLoadingArtisans(false);
@@ -88,7 +99,9 @@ export default function HomePage({
       <Artisan
         artisans={artisans}
         loading={loadingArtisans}
-        onViewDetails={(artisanId) => goProtected(`/artisans/${artisanId}`)}
+        onViewDetails={(artisanId) =>
+          goProtected(`/artisans/${encodeURIComponent(String(artisanId))}`)
+        }
       />
 
       <Shows
@@ -111,6 +124,11 @@ export default function HomePage({
         }}
         onLogin={() => {
           navigate("/login", {
+            state: { from: redirectTo || "/" },
+          });
+        }}
+        onSignup={() => {
+          navigate("/signup", {
             state: { from: redirectTo || "/" },
           });
         }}

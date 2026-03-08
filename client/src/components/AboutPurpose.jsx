@@ -271,10 +271,7 @@ export default function AboutPurpose() {
               icon="groups"
               img="https://lh3.googleusercontent.com/aida-public/AB6AXuAYspRcANfW-ZfHIk5tMYhXqSdaZSq3MfPWUaZmmsWA1_k6fsqDBr_LLWPF9Ikxh0KWVd_i0Go-ZhvbJ7EHZQ_j8HyE1cbRbJSU3YuGjyR5zdRAe8REqSxIzD9QnaSDCv7qPZBZnyWLp6mk15FNQfFiKoYo-MQqSQCNs91oimFxVOBvfzC0qrbUuQP0AcxweBJBSQllhzX8FmEOxkLYZdeSbHv_x4f0IVdvP5iVQ-veQrCdUCAjFwJzXT-VNulkz_3wtWo4xJVD4sM"
             >
-              We work with: Pottery makers, Food Artisans (<i>puto</i>,{" "}
-              <i>kakanin</i>, native delicacies), Furniture Makers, Woodworkers,
-              Blacksmiths, Weavers, Traditional Craftsmen, and Small Home-Based
-              Producers.
+              We proudly partner with Pangasinan’s talented artisans — from master potters and furniture craftsmen to traditional sword makers, bamboo weavers, and local food artisans specializing in puto.
             </ImpactCard>
           </div>
         </div>

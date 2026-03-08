@@ -1,9 +1,14 @@
 import { Link } from "react-router-dom";
 import ProductGrid from "./ProductGrid";
 
-export default function Shows({ featured = [], loading = false, onQuickView }) {
+export default function Shows({
+  featured = [],
+  loading = false,
+  onQuickView,
+  onViewAll,
+}) {
   return (
-    <section id="products" className="py-12 sm:py-16">
+    <section id="products" className="py-14 sm:py-18">
       <div className="container">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
           <div>
@@ -15,15 +20,25 @@ export default function Shows({ featured = [], loading = false, onQuickView }) {
             </p>
           </div>
 
-          <Link
-            to="/products"
-            className="text-gray-600 hover:text-[#7C3A2E] transition font-medium inline-flex items-center gap-2"
-          >
-            View All Products <span className="material-icons text-sm">arrow_forward</span>
-          </Link>
+          {typeof onViewAll === "function" ? (
+            <button
+              type="button"
+              onClick={onViewAll}
+              className="inline-flex items-center gap-2 rounded-full border border-[#7C3A2E]/20 bg-white/70 px-4 py-2 text-sm font-semibold text-[#7C3A2E] transition hover:bg-white"
+            >
+              View All Products <span className="material-icons text-sm">arrow_forward</span>
+            </button>
+          ) : (
+            <Link
+              to="/products"
+              className="inline-flex items-center gap-2 rounded-full border border-[#7C3A2E]/20 bg-white/70 px-4 py-2 text-sm font-semibold text-[#7C3A2E] transition hover:bg-white"
+            >
+              View All Products <span className="material-icons text-sm">arrow_forward</span>
+            </Link>
+          )}
         </div>
 
-        <div className="rounded-3xl border border-black/10 bg-white/70 backdrop-blur p-5 sm:p-8 shadow-soft">
+        <div className="surface-card p-5 sm:p-8">
           <div className="flex items-end justify-between gap-3">
             <div>
               <h3 className="text-xl sm:text-2xl font-bold text-[#7C3A2E]">

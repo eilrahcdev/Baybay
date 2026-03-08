@@ -1,11 +1,38 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import baybayLogo from "../assets/baybay logo.png";
+import { api } from "../lib/api";
 
 export default function Footer() {
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState("");
+
+  const submitNewsletter = async (e) => {
+    e.preventDefault();
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      setFeedback("Please enter your email address.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setFeedback("");
+      await api.subscribeNewsletter({ email: cleanEmail });
+      setEmail("");
+      setFeedback("Thanks! You are subscribed to our newsletter.");
+    } catch (error) {
+      setFeedback("We could not subscribe you right now. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <footer className="bg-[#1E1B1A] text-white pt-14 pb-8 border-t border-gray-800">
+    <footer className="border-t border-[#7C3A2E]/15 bg-[#211210] pt-14 pb-8 text-white">
       <div className="container">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+        <div className="mb-12 grid grid-cols-1 gap-10 rounded-3xl border border-white/10 bg-white/[0.03] p-7 sm:grid-cols-2 lg:grid-cols-4">
           {/* Logo + Description */}
           <div>
             <img
@@ -13,7 +40,7 @@ export default function Footer() {
               alt="Baybay Logo"
               className="h-12 sm:h-14 w-auto object-contain"
             />
-            <p className="mt-4 text-gray-400 text-sm leading-relaxed max-w-sm">
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-gray-300">
               Empowering Pangasinan&apos;s local artisans by bringing their stories and crafts to the world.
             </p>
           </div>
@@ -23,7 +50,7 @@ export default function Footer() {
             <h4 className="font-display text-lg font-bold mb-4 text-orange-200">
               Products
             </h4>
-            <ul className="space-y-2 text-sm text-gray-400">
+            <ul className="space-y-2 text-sm text-gray-300">
               <li>
                 <a className="hover:text-white transition" href="#products">
                   Featured Products
@@ -42,7 +69,7 @@ export default function Footer() {
             <h4 className="font-display text-lg font-bold mb-4 text-orange-200">
               Company
             </h4>
-            <ul className="space-y-2 text-sm text-gray-400">
+            <ul className="space-y-2 text-sm text-gray-300">
               <li>
                 <a className="hover:text-white transition" href="#about">
                   About Us
@@ -61,34 +88,38 @@ export default function Footer() {
             <h4 className="font-display text-lg font-bold mb-4 text-orange-200">
               Newsletter
             </h4>
-            <p className="text-gray-400 text-sm mb-4">
+            <p className="mb-4 text-sm text-gray-300">
               Subscribe to get updates on new artisans and products.
             </p>
 
             <form
               className="flex flex-col sm:flex-row gap-3"
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={submitNewsletter}
             >
               <label className="sr-only" htmlFor="newsletter-email">Email</label>
               <input
                 id="newsletter-email"
-                className="bg-gray-800 border border-gray-700 text-white rounded-xl px-4 py-2 w-full focus:ring-2 focus:ring-[#7C3A2E] text-sm outline-none"
+                className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-[#7C3A2E]"
                 placeholder="Email Address"
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
               <button
                 type="submit"
-                className="bg-[#7C3A2E] hover:bg-[#5e2b22] px-5 py-2 rounded-xl transition text-sm font-semibold whitespace-nowrap"
+                disabled={submitting}
+                className="whitespace-nowrap rounded-xl bg-[#7C3A2E] px-5 py-2 text-sm font-semibold transition hover:bg-[#5e2b22]"
               >
-                Subscribe
+                {submitting ? "Saving..." : "Subscribe"}
               </button>
             </form>
+            {feedback ? <p className="mt-3 text-xs text-gray-300">{feedback}</p> : null}
           </div>
         </div>
 
-        <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row gap-3 justify-between items-center text-xs text-gray-500">
+        <div className="flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-gray-400 sm:flex-row">
           <p>© {new Date().getFullYear()} BAYBAY. All rights reserved.</p>
-          <p className="text-gray-600">Made for Pangasinan artisans.</p>
+          <p className="text-gray-500">Made for Pangasinan artisans.</p>
         </div>
       </div>
     </footer>

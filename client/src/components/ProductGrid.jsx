@@ -1,11 +1,12 @@
 import { useMemo } from "react";
+import { resolveImageUrl } from "../lib/imageUrl";
 
 function ProductCard({ item, onQuickView }) {
   const image =
-    item.image_url ||
-    item.image ||
-    item.img ||
-    "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1200";
+    resolveImageUrl(
+      item.image_url || item.product_image || item.image || item.img || item.photo_url,
+      "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1200"
+    );
 
   const name = item.name || item.title || "Product";
   const description = item.description || "No description.";
@@ -13,7 +14,7 @@ function ProductCard({ item, onQuickView }) {
 
   return (
     <div
-      className="rounded-2xl bg-white border border-baybay-sand shadow-soft overflow-hidden hover:shadow-md transition cursor-pointer"
+      className="cursor-pointer overflow-hidden rounded-2xl border border-black/10 bg-white/85 shadow-[0_12px_30px_rgba(20,16,12,0.12)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(20,16,12,0.18)]"
       onClick={() => onQuickView?.(item)}
       role="button"
       tabIndex={0}

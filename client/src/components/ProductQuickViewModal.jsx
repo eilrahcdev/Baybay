@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { api } from "../lib/api";
+import { resolveImageUrl } from "../lib/imageUrl";
 
 export default function ProductQuickViewModal({ product, onClose }) {
   if (!product) return null;
@@ -62,7 +63,10 @@ export default function ProductQuickViewModal({ product, onClose }) {
   }, [variants, selectedVariantId]);
 
   const name = product?.name || product?.title || "Product";
-  const img = product?.image_url || product?.image || product?.img;
+  const img = resolveImageUrl(
+    product?.image_url || product?.product_image || product?.image || product?.img || product?.photo_url,
+    "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1200"
+  );
 
   // Show selected variant price, fallback to product price.
   const displayPrice = selectedVariant?.price ?? product?.price ?? null;
@@ -137,6 +141,10 @@ export default function ProductQuickViewModal({ product, onClose }) {
                   <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {variants.map((v) => {
                       const active = String(v.id) === String(selectedVariantId);
+                      const variantImage = resolveImageUrl(
+                        v?.image_url || v?.variant_image || v?.image || v?.img || v?.photo_url || img,
+                        img
+                      );
                       return (
                         <button
                           key={v.id}
@@ -150,7 +158,13 @@ export default function ProductQuickViewModal({ product, onClose }) {
                           ].join(" ")}
                         >
                           <div className="flex items-center justify-between gap-3">
-                            <div className="min-w-0">
+                            <div className="flex min-w-0 items-center gap-3">
+                              <img
+                                src={variantImage}
+                                alt={v.variant_name || "Variant"}
+                                className="h-12 w-12 shrink-0 rounded-lg object-cover border border-black/10 bg-black/5"
+                                loading="lazy"
+                              />
                               <p className="font-semibold text-black/80 truncate">
                                 {v.variant_name}
                               </p>

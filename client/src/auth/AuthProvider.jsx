@@ -1,10 +1,10 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { api } from "../lib/api";
+import { clearAuthToken, getAuthToken, setAuthToken } from "../lib/authToken";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
 
@@ -13,35 +13,54 @@ export function AuthProvider({ children }) {
 
     async function init() {
       setLoadingAuth(true);
+      const token = getAuthToken();
 
-      const { data } = await supabase.auth.getSession();
-      if (!alive) return;
+      if (!token) {
+        if (!alive) return;
+        setUser(null);
+        setLoadingAuth(false);
+        return;
+      }
 
-      setSession(data?.session ?? null);
-      setUser(data?.session?.user ?? null);
-      setLoadingAuth(false);
+      try {
+        const data = await api.me();
+        if (!alive) return;
+        setUser(data?.user || null);
+      } catch (error) {
+        clearAuthToken();
+        if (!alive) return;
+        setUser(null);
+      } finally {
+        if (alive) setLoadingAuth(false);
+      }
     }
 
     init();
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession ?? null);
-      setUser(newSession?.user ?? null);
-      setLoadingAuth(false);
-    });
-
     return () => {
       alive = false;
-      sub?.subscription?.unsubscribe?.();
     };
   }, []);
 
-  const value = {
-    session,
-    user,
-    loadingAuth,
-    isAuthed: !!user,
-  };
+  const value = useMemo(
+    () => ({
+      user,
+      loadingAuth,
+      isAuthed: !!user,
+      signIn: ({ accessToken, user: nextUser }) => {
+        if (accessToken) setAuthToken(accessToken);
+        setUser(nextUser || null);
+      },
+      signOut: () => {
+        clearAuthToken();
+        setUser(null);
+      },
+      refreshUser: async () => {
+        const data = await api.me();
+        setUser(data?.user || null);
+      },
+    }),
+    [user, loadingAuth]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

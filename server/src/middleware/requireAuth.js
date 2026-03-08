@@ -1,4 +1,5 @@
-import { supabase } from "../supabase.js";
+import { verifyAuthToken } from "../authToken.js";
+import { getEmailVerifiedAt, getUserById } from "../supabaseStore.js";
 
 export async function requireAuth(req, res, next) {
   try {
@@ -9,15 +10,27 @@ export async function requireAuth(req, res, next) {
       return res.status(401).json({ message: "Missing Bearer token" });
     }
 
-    const { data, error } = await supabase.auth.getUser(token);
+    const decoded = verifyAuthToken(token);
+    const userId = String(decoded?.sub || "").trim();
+    if (!userId) return res.status(401).json({ message: "Invalid token" });
 
-    if (error || !data?.user) {
-      return res.status(401).json({ message: "Invalid token" });
-    }
+    const user = await getUserById(userId);
+    if (!user) return res.status(401).json({ message: "Invalid token" });
+    const emailVerifiedAt = await getEmailVerifiedAt(user.email);
 
-    req.user = data.user; // Attach authenticated user to request.
+    req.user = {
+      id: user.id,
+      email: user.email,
+      email_confirmed_at: emailVerifiedAt,
+      user_metadata: {
+        full_name: user.full_name || "",
+      },
+    };
     next();
   } catch (e) {
+    if (e?.name === "JsonWebTokenError" || e?.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Invalid token" });
+    }
     return res.status(500).json({ message: "Auth middleware error" });
   }
 }

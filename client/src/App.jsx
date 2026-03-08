@@ -9,9 +9,9 @@ import ArtisanPage from "./pages/ArtisanPage";
 
 import Login from "./pages/LoginPage";
 import Signup from "./pages/SignupPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
-import AuthCallback from "./pages/AuthCallback"; // Route for email link callbacks.
 
 import ProtectedRoute from "./auth/ProtectedRoute";
 
@@ -28,23 +28,32 @@ export default function App() {
     let alive = true;
 
     async function load() {
-      try {
-        setLoadingProducts(true);
-        setLoadingTeam(true);
+      setLoadingProducts(true);
+      setLoadingTeam(true);
 
-        const [p, t] = await Promise.all([api.products({ limit: 200 }), api.team()]);
+      const [productsResult, teamResult] = await Promise.allSettled([
+        api.products({ limit: 200 }),
+        api.team(),
+      ]);
 
-        if (!alive) return;
+      if (!alive) return;
 
-        setProducts(Array.isArray(p) ? p : []);
-        setTeam(Array.isArray(t) ? t : []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        if (!alive) return;
-        setLoadingProducts(false);
-        setLoadingTeam(false);
+      if (productsResult.status === "fulfilled") {
+        setProducts(Array.isArray(productsResult.value) ? productsResult.value : []);
+      } else {
+        console.error("Failed to load products:", productsResult.reason);
+        setProducts([]);
       }
+
+      if (teamResult.status === "fulfilled") {
+        setTeam(Array.isArray(teamResult.value) ? teamResult.value : []);
+      } else {
+        console.error("Failed to load team:", teamResult.reason);
+        setTeam([]);
+      }
+
+      setLoadingProducts(false);
+      setLoadingTeam(false);
     }
 
     load();
@@ -54,7 +63,10 @@ export default function App() {
   }, []);
 
   const featuredProducts = useMemo(() => {
-    return (products || []).filter((p) => p?.is_featured === true).slice(0, 5);
+    const list = Array.isArray(products) ? products : [];
+    const featured = list.filter((p) => p?.is_featured === true);
+    if (featured.length > 0) return featured.slice(0, 5);
+    return list.slice(0, 5);
   }, [products]);
 
   const productsByCategory = useMemo(() => {
@@ -104,11 +116,9 @@ export default function App() {
       {/* Auth routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-
-      {/* Email link callback route */}
-      <Route path="/auth/callback" element={<AuthCallback />} />
     </Routes>
   );
 }

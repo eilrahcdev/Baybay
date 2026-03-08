@@ -4,7 +4,7 @@ import { useAuth } from "./AuthProvider";
 import AuthGateModal from "../components/AuthGateModal";
 
 export default function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
+  const { user, loadingAuth } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -12,15 +12,15 @@ export default function ProtectedRoute({ children }) {
 
   // Show the modal when user is not logged in.
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loadingAuth && !user) {
       setOpen(true);
     } else {
       setOpen(false);
     }
-  }, [loading, user]);
+  }, [loadingAuth, user]);
 
   // Show loader while session is being checked.
-  if (loading) {
+  if (loadingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-6">
         <div className="text-center">
@@ -51,6 +51,12 @@ export default function ProtectedRoute({ children }) {
         }}
         onLogin={() => {
           navigate("/login", {
+            replace: true,
+            state: { from: location.pathname + location.search },
+          });
+        }}
+        onSignup={() => {
+          navigate("/signup", {
             replace: true,
             state: { from: location.pathname + location.search },
           });

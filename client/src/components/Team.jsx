@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { resolveImageUrl } from "../lib/imageUrl";
 
 export default function TeamCarousel({ team = [], loading = false }) {
   const slides = useMemo(() => {
@@ -11,10 +12,10 @@ export default function TeamCarousel({ team = [], loading = false }) {
         id: t.id,
         title: t.title || "Our Team",
         image:
-          t.image_url ||
-          t.photo_url ||
-          t.avatar_url ||
-          t.team_image ||
+          resolveImageUrl(
+            t.image_url || t.photo_url || t.avatar_url || t.team_image,
+            ""
+          ) ||
           null,
       }))
       .filter((s) => !!s.image);

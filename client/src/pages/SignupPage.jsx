@@ -1,17 +1,20 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Eye,
   EyeOff,
   CircleCheck,
   CircleX,
   Mail,
+  User,
+  LockKeyhole,
   X,
   FileText,
   Shield,
 } from "lucide-react";
-import { supabase } from "../lib/supabaseClient";
+import { api } from "../lib/api";
 import { TERMS_CONTENT, PRIVACY_CONTENT } from "../components/LegalContent";
+import { getFriendlyError } from "../lib/friendlyErrors";
 
 function getPasswordStrength(pw) {
   const v = (pw || "").trim();
@@ -28,7 +31,7 @@ function getPasswordStrength(pw) {
   const map = {
     1: { label: "Weak", hint: "Add more characters and mix letters/numbers." },
     2: { label: "Fair", hint: "Try adding a number and a symbol." },
-    3: { label: "Good", hint: "Nice — add a symbol for extra strength." },
+    3: { label: "Good", hint: "Nice one - add a symbol for extra strength." },
     4: { label: "Strong", hint: "Great password strength." },
   };
 
@@ -111,11 +114,11 @@ function LegalModal({ open, onClose, initialTab = "terms", onAgree }) {
         aria-label="Close modal backdrop"
       />
 
-      <div className="relative w-full max-w-3xl rounded-3xl bg-white shadow-2xl border border-black/10 overflow-hidden">
+      <div className="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-black/10 bg-white shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-black/10">
+        <div className="flex items-center justify-between border-b border-black/10 px-5 py-4 sm:px-6">
           <div className="flex items-center gap-2">
-            <div className="rounded-2xl bg-[#7C3A2E]/10 p-2 border border-[#7C3A2E]/15">
+            <div className="rounded-2xl border border-[#7C3A2E]/15 bg-[#7C3A2E]/10 p-2">
               {tab === "terms" ? (
                 <FileText className="text-[#7C3A2E]" size={18} />
               ) : (
@@ -123,19 +126,17 @@ function LegalModal({ open, onClose, initialTab = "terms", onAgree }) {
               )}
             </div>
             <div>
-              <p className="font-semibold text-[#7C3A2E] leading-tight">
+              <p className="font-semibold leading-tight text-[#7C3A2E]">
                 {tab === "terms" ? "Terms & Conditions" : "Privacy Policy"}
               </p>
-              <p className="text-xs text-black/55">
-                Scroll to the bottom to enable “I Agree”.
-              </p>
+              <p className="text-xs text-black/55">Scroll to the bottom to enable "I Agree".</p>
             </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl p-2 text-black/50 hover:text-black hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-[#7C3A2E]/30"
+            className="rounded-xl p-2 text-black/50 hover:bg-black/5 hover:text-black focus:outline-none focus:ring-2 focus:ring-[#7C3A2E]/30"
             aria-label="Close modal"
           >
             <X size={18} />
@@ -143,15 +144,15 @@ function LegalModal({ open, onClose, initialTab = "terms", onAgree }) {
         </div>
 
         {/* Tabs */}
-        <div className="px-5 sm:px-6 pt-4">
-          <div className="inline-flex rounded-2xl bg-black/5 p-1 border border-black/10">
+        <div className="px-5 pt-4 sm:px-6">
+          <div className="inline-flex rounded-2xl border border-black/10 bg-black/5 p-1">
             <button
               type="button"
               onClick={() => setTab("terms")}
               className={[
-                "px-4 py-2 rounded-xl text-sm font-semibold transition",
+                "rounded-xl px-4 py-2 text-sm font-semibold transition",
                 tab === "terms"
-                  ? "bg-white shadow-sm text-[#7C3A2E] border border-black/10"
+                  ? "border border-black/10 bg-white text-[#7C3A2E] shadow-sm"
                   : "text-black/60 hover:text-black",
               ].join(" ")}
             >
@@ -161,9 +162,9 @@ function LegalModal({ open, onClose, initialTab = "terms", onAgree }) {
               type="button"
               onClick={() => setTab("privacy")}
               className={[
-                "px-4 py-2 rounded-xl text-sm font-semibold transition",
+                "rounded-xl px-4 py-2 text-sm font-semibold transition",
                 tab === "privacy"
-                  ? "bg-white shadow-sm text-[#7C3A2E] border border-black/10"
+                  ? "border border-black/10 bg-white text-[#7C3A2E] shadow-sm"
                   : "text-black/60 hover:text-black",
               ].join(" ")}
             >
@@ -176,13 +177,13 @@ function LegalModal({ open, onClose, initialTab = "terms", onAgree }) {
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="px-5 sm:px-6 py-4 max-h-[60vh] overflow-auto"
+          className="max-h-[60vh] overflow-auto px-5 py-4 sm:px-6"
         >
           {tab === "terms" ? TERMS_CONTENT : PRIVACY_CONTENT}
         </div>
 
         {/* Footer */}
-        <div className="px-5 sm:px-6 py-4 border-t border-black/10 bg-black/[0.02] flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3 border-t border-black/10 bg-black/[0.02] px-5 py-4 sm:px-6">
           <p className="text-xs text-black/55">
             {canAgree ? "You can agree now." : "Scroll to the bottom to continue."}
           </p>
@@ -191,7 +192,7 @@ function LegalModal({ open, onClose, initialTab = "terms", onAgree }) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-black/70 hover:bg-black/5 transition"
+              className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-black/70 transition hover:bg-black/5"
             >
               Close
             </button>
@@ -203,8 +204,7 @@ function LegalModal({ open, onClose, initialTab = "terms", onAgree }) {
                 onAgree?.();
                 onClose?.();
               }}
-              className="rounded-xl bg-[#7C3A2E] px-4 py-2 text-sm font-semibold text-white shadow-sm
-                         hover:bg-[#6b3127] transition disabled:opacity-60 disabled:cursor-not-allowed"
+              className="rounded-xl bg-[#7C3A2E] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#6b3127] disabled:cursor-not-allowed disabled:opacity-60"
             >
               I Agree
             </button>
@@ -216,6 +216,8 @@ function LegalModal({ open, onClose, initialTab = "terms", onAgree }) {
 }
 
 export default function Signup() {
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -240,10 +242,6 @@ export default function Signup() {
     if (!confirmPassword) return null;
     return password === confirmPassword;
   }, [password, confirmPassword]);
-
-  const redirectTo = `${
-    import.meta.env.VITE_SITE_URL || "http://localhost:5173"
-  }/login`;
 
   const openTerms = () => {
     setLegalTab("terms");
@@ -271,23 +269,27 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const data = await api.signup({
+        full_name: cleanName,
         email: cleanEmail,
         password,
-        options: {
-          emailRedirectTo: redirectTo,
-          data: { full_name: cleanName },
-        },
       });
 
-      if (error) {
-        setError(error.message);
-        return;
-      }
+      const usersSynced = data?.usersSynced ?? data?.profileSynced;
 
+      if (usersSynced === false) {
+        setError(
+          "Account created, but we could not save account details yet. Please contact support and share your email."
+        );
+      } else if (data?.requiresOtpResend) {
+        setError(
+          "Account created, but we could not send the verification code automatically. Please resend it below."
+        );
+      }
       setSent(true);
-    } catch {
-      setError("Signup failed. Please try again.");
+    } catch (e) {
+      console.error(e);
+      setError(getFriendlyError("signup", e?.message));
     } finally {
       setLoading(false);
     }
@@ -300,54 +302,63 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: "signup",
+      await api.requestOtp({
         email: cleanEmail,
-        options: { emailRedirectTo: redirectTo },
+        purpose: "verify",
       });
-
-      if (error) return setError(error.message);
       setSent(true);
-    } catch {
-      setError("Failed to resend verification email.");
+    } catch (e) {
+      console.error(e);
+      setError(getFriendlyError("resend_verification_code", e?.message));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen w-full grid lg:grid-cols-2 bg-white">
+    <div className="page-shell relative grid min-h-screen w-full overflow-hidden lg:h-screen lg:grid-cols-2 lg:overflow-hidden">
       {/* Left image */}
-      <div className="relative hidden lg:block">
+      <div className="relative hidden lg:block lg:h-screen">
         <img
           src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3sEtA9VSN7qPvfv_YSMnxp7BpkOE3F522AH82n7mpA5aYVhcCxRnh_UmC0EtloCxmtacFvNON3KqvCT_IuPtD2h18pj_z_5NGEpgaAma1Qc8bydCT2qBj46MUnLlu1nrnlkSgKiDp957cyhxfcEJKFVRJPsF6a1lgCFvTvZ6H3PA8mrNH9h9Gus3KmuZSWS4b5R5TGZqC0riU0QbYdMxZDNNuiCGzg-MxT6s4Cexa8V4drcWHk9D7uRGtAELPxgrKEpvfKPwANSk"
           alt="BAYBAY background"
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-[#7C3A2E]/65" />
-        <div className="absolute inset-0 flex items-center justify-center px-10">
-          <div className="max-w-md text-center text-white">
-            <h1 className="font-display text-5xl leading-tight">
-              Be Part of the <br /> Excellence
-            </h1>
-            <p className="mt-4 text-white/90 leading-relaxed">
-              Your gateway to Pangasinan’s artisanal excellence awaits. Join a
-              community fueled by culture, creativity, and craftsmanship.
+        <div className="absolute inset-0 bg-gradient-to-br from-[#2b130e]/80 via-[#6f3228]/68 to-[#130a08]/74" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_12%,rgba(255,255,255,0.22),transparent_34%),radial-gradient(circle_at_78%_88%,rgba(196,138,126,0.3),transparent_36%)]" />
+        <div className="absolute inset-0 flex items-center justify-center px-12">
+          <div className="max-w-md text-white">
+            <span className="inline-flex items-center rounded-full border border-white/35 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em]">
+              Create Account
+            </span>
+            <h1 className="mt-5 font-display text-5xl leading-tight">Start with Baybay today</h1>
+            <p className="mt-5 text-white/90 leading-relaxed">
+              Join Baybay and discover the work of Pangasinan artisans through a curated,
+              story-first marketplace.
             </p>
           </div>
         </div>
       </div>
 
       {/* Right form */}
-      <div className="flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md">
+      <div className="relative flex items-center justify-center px-6 py-10 sm:px-8 lg:h-screen lg:overflow-y-auto">
+        <div className="pointer-events-none absolute left-2 top-8 h-40 w-40 rounded-full bg-[#e8c3b8]/40 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-8 right-2 h-40 w-40 rounded-full bg-[#7C3A2E]/20 blur-3xl" />
+
+        <div className="w-full max-w-lg">
           {/* Form card */}
-          <div className="rounded-3xl border border-black/10 bg-white shadow-[0_24px_70px_rgba(0,0,0,0.10)] p-6 sm:p-8">
-            <h2 className="text-center font-display text-4xl text-[#7C3A2E]">
+          <div className="relative overflow-hidden rounded-[28px] border border-white/60 bg-white/88 p-6 shadow-[0_24px_64px_rgba(28,17,13,0.16)] backdrop-blur-xl sm:p-8">
+            <div className="pointer-events-none absolute -top-16 right-0 h-32 w-32 rounded-full bg-[#7C3A2E]/10 blur-2xl" />
+
+            <span className="inline-flex items-center rounded-full border border-[#7C3A2E]/18 bg-[#7C3A2E]/8 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7C3A2E]">
+              Create Account
+            </span>
+
+            <h2 className="mt-4 text-center font-display text-4xl text-[#7C3A2E]">
               Welcome to Baybay!
             </h2>
             <p className="mt-2 text-center text-sm text-black/60">
-              Sign up to start exploring Pangasinan&apos;s atisans and their crafts.
+              Sign up to start exploring Pangasinan&apos;s artisans and their crafts.
             </p>
 
             {error ? (
@@ -357,35 +368,41 @@ export default function Signup() {
             ) : null}
 
             {sent ? (
-              <div className="mt-6 rounded-2xl border border-[#7C3A2E]/20 bg-[#7C3A2E]/5 p-5">
+              <div className="mt-6 rounded-2xl border border-[#7C3A2E]/20 bg-[#7C3A2E]/6 p-5">
                 <div className="flex items-start gap-3">
-                  <div className="mt-0.5 rounded-xl bg-white p-2 shadow-sm border border-black/5">
+                  <div className="mt-0.5 rounded-xl border border-black/5 bg-white p-2 shadow-sm">
                     <Mail size={18} className="text-[#7C3A2E]" />
                   </div>
                   <div>
                     <p className="font-semibold text-[#7C3A2E]">Verify your email</p>
                     <p className="mt-1 text-sm text-black/65">
-                      We sent a verification link to{" "}
-                      <span className="font-medium">{email}</span>. Open it to
-                      activate your account, then go back and log in.
+                      We sent a 6-digit verification code to{" "}
+                      <span className="font-medium">{email}</span>. Enter the code to activate
+                      your account.
                     </p>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(`/verify-email?email=${encodeURIComponent(email)}`)
+                      }
+                      className="mt-4 inline-flex items-center justify-center rounded-xl bg-[#7C3A2E] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#6b3127]"
+                    >
+                      Continue to Verify Email
+                    </button>
 
                     <button
                       type="button"
                       onClick={resendVerification}
                       disabled={loading}
-                      className="mt-4 inline-flex items-center justify-center rounded-xl border border-[#7C3A2E]/20 bg-white px-4 py-2 text-sm font-semibold text-[#7C3A2E]
-                                 hover:bg-[#7C3A2E]/5 transition disabled:opacity-60"
+                      className="mt-3 block text-sm font-semibold text-[#7C3A2E] hover:underline disabled:opacity-60"
                     >
-                      {loading ? "Resending..." : "Resend verification email"}
+                      {loading ? "Sending..." : "Send another code"}
                     </button>
 
                     <p className="mt-4 text-sm text-black/60">
-                      Already verified?{" "}
-                      <Link
-                        to="/login"
-                        className="font-semibold text-[#7C3A2E] hover:underline"
-                      >
+                      Already verified and logged in?{" "}
+                      <Link to="/login" className="font-semibold text-[#7C3A2E] hover:underline">
                         Log In
                       </Link>
                     </p>
@@ -396,44 +413,47 @@ export default function Signup() {
               <form onSubmit={handleSubmit} className="mt-8 space-y-5">
                 <div>
                   <label className="text-sm font-medium text-black/70">Full Name</label>
-                  <input
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    type="text"
-                    placeholder="Juan Dela Cruz"
-                    className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm outline-none
-                               focus:border-[#7C3A2E] focus:ring-4 focus:ring-[#7C3A2E]/15"
-                  />
+                  <div className="mt-2 flex items-center rounded-xl border border-black/15 bg-white/90 px-3 shadow-sm transition focus-within:border-[#7C3A2E] focus-within:ring-4 focus-within:ring-[#7C3A2E]/15">
+                    <User size={17} className="text-black/45" />
+                    <input
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      type="text"
+                      placeholder="Juan Dela Cruz"
+                      className="w-full bg-transparent px-3 py-3 text-sm outline-none"
+                    />
+                  </div>
                 </div>
 
                 <div>
                   <label className="text-sm font-medium text-black/70">Email</label>
-                  <input
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    type="email"
-                    placeholder="juandelacruz@gmail.com"
-                    className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm outline-none
-                               focus:border-[#7C3A2E] focus:ring-4 focus:ring-[#7C3A2E]/15"
-                  />
+                  <div className="mt-2 flex items-center rounded-xl border border-black/15 bg-white/90 px-3 shadow-sm transition focus-within:border-[#7C3A2E] focus-within:ring-4 focus-within:ring-[#7C3A2E]/15">
+                    <Mail size={17} className="text-black/45" />
+                    <input
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      type="email"
+                      placeholder="juandelacruz@gmail.com"
+                      className="w-full bg-transparent px-3 py-3 text-sm outline-none"
+                    />
+                  </div>
                 </div>
 
                 <div>
                   <label className="text-sm font-medium text-black/70">Password</label>
-                  <div className="relative mt-2">
+                  <div className="relative mt-2 flex items-center rounded-xl border border-black/15 bg-white/90 pl-3 shadow-sm transition focus-within:border-[#7C3A2E] focus-within:ring-4 focus-within:ring-[#7C3A2E]/15">
+                    <LockKeyhole size={17} className="text-black/45" />
                     <input
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       type={showPassword ? "text" : "password"}
                       placeholder="Create a password"
-                      className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 pr-12 text-sm outline-none
-                                 focus:border-[#7C3A2E] focus:ring-4 focus:ring-[#7C3A2E]/15"
+                      className="w-full bg-transparent px-3 py-3 pr-12 text-sm outline-none"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-black/50 hover:text-[#7C3A2E]
-                                 focus:outline-none focus:ring-2 focus:ring-[#7C3A2E]/30"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-black/50 transition hover:text-[#7C3A2E] focus:outline-none focus:ring-2 focus:ring-[#7C3A2E]/30"
                       aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -446,7 +466,7 @@ export default function Signup() {
                       <p className="text-xs font-semibold text-black/60">{strength.label}</p>
                     </div>
 
-                    <div className="mt-2 h-2 w-full rounded-full bg-black/10 overflow-hidden">
+                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-black/10">
                       <div
                         className="h-full rounded-full transition-all"
                         style={{
@@ -463,29 +483,26 @@ export default function Signup() {
                       />
                     </div>
 
-                    {password && (
-                      <p className="mt-2 text-[11px] text-black/55">{strength.hint}</p>
-                    )}
+                    {password && <p className="mt-2 text-[11px] text-black/55">{strength.hint}</p>}
                   </div>
                 </div>
 
                 <div>
                   <label className="text-sm font-medium text-black/70">Confirm Password</label>
 
-                  <div className="relative mt-2">
+                  <div className="relative mt-2 flex items-center rounded-xl border border-black/15 bg-white/90 pl-3 shadow-sm transition focus-within:border-[#7C3A2E] focus-within:ring-4 focus-within:ring-[#7C3A2E]/15">
+                    <LockKeyhole size={17} className="text-black/45" />
                     <input
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Confirm password"
-                      className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 pr-12 text-sm outline-none
-                                 focus:border-[#7C3A2E] focus:ring-4 focus:ring-[#7C3A2E]/15"
+                      className="w-full bg-transparent px-3 py-3 pr-12 text-sm outline-none"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-black/50 hover:text-[#7C3A2E]
-                                 focus:outline-none focus:ring-2 focus:ring-[#7C3A2E]/30"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-black/50 transition hover:text-[#7C3A2E] focus:outline-none focus:ring-2 focus:ring-[#7C3A2E]/30"
                       aria-label={
                         showConfirmPassword ? "Hide confirm password" : "Show confirm password"
                       }
@@ -511,7 +528,7 @@ export default function Signup() {
 
                 {/* Terms checkbox and modal links */}
                 <div className="rounded-2xl border border-black/10 bg-black/[0.02] p-4">
-                  <label className="flex items-start gap-3 cursor-pointer">
+                  <label className="flex cursor-pointer items-start gap-3">
                     <input
                       type="checkbox"
                       checked={acceptedLegal}
@@ -521,7 +538,7 @@ export default function Signup() {
                       }}
                       className="mt-1 h-4 w-4 rounded border-black/30 text-[#7C3A2E] focus:ring-[#7C3A2E]/30"
                     />
-                    <span className="text-sm text-black/70 leading-relaxed">
+                    <span className="text-sm leading-relaxed text-black/70">
                       I agree to the{" "}
                       <button
                         type="button"
@@ -546,8 +563,7 @@ export default function Signup() {
                 <button
                   type="submit"
                   disabled={loading || passwordsMatch === false || !acceptedLegal}
-                  className="w-full rounded-xl bg-[#7C3A2E] py-3 font-semibold text-white shadow-sm
-                             hover:bg-[#6b3127] transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full rounded-xl bg-[#7C3A2E] py-3 font-semibold text-white shadow-[0_10px_28px_rgba(124,58,46,0.35)] transition hover:-translate-y-0.5 hover:bg-[#6b3127] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? "Creating account..." : "Sign Up"}
                 </button>

@@ -7,7 +7,7 @@ import ProductQuickViewModal from "../components/ProductQuickViewModal";
 import { useAuth } from "../auth/AuthProvider";
 
 export default function ProductsPage({ categories = {}, loading = false }) {
-  const { user, loading: loadingAuth } = useAuth();
+  const { user, loadingAuth } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -38,12 +38,12 @@ export default function ProductsPage({ categories = {}, loading = false }) {
 
   return (
     <>
-      <section className="py-10 sm:py-14">
+      <section className="page-shell py-10 sm:py-14">
         <div className="container">
           <div className="mb-6">
             <Link
               to="/"
-              className="inline-flex items-center gap-2 rounded-xl bg-white border border-black/10 px-5 py-3 text-sm font-semibold text-black/70 shadow-soft hover:bg-black/5 transition"
+              className="inline-flex items-center gap-2 rounded-full border border-[#7C3A2E]/25 bg-white/80 px-5 py-2.5 text-sm font-semibold text-[#7C3A2E] shadow-sm transition hover:bg-white"
             >
               <ArrowLeft size={16} />
               Back to Home
@@ -59,7 +59,7 @@ export default function ProductsPage({ categories = {}, loading = false }) {
 
           <div className="space-y-12">
             {orderedCategories.map((cat) => (
-              <div key={cat}>
+              <div key={cat} className="surface-card p-5 sm:p-7">
                 <div className="flex items-end justify-between gap-3">
                   <h2 className="text-xl sm:text-2xl font-bold text-[#7C3A2E]">{cat}</h2>
                   <span className="text-sm text-black/50">

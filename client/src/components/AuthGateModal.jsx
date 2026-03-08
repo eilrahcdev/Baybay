@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 
 export default function AuthGateModal({
   open,
@@ -6,6 +6,7 @@ export default function AuthGateModal({
   message = "You need an account to view this page.",
   onClose,
   onLogin,
+  onSignup,
 }) {
   if (!open) return null;
 
@@ -16,31 +17,41 @@ export default function AuthGateModal({
         type="button"
         aria-label="Close"
         onClick={onClose}
-        className="absolute inset-0 bg-black/45 backdrop-blur-sm"
+        className="absolute inset-0 bg-[#140f0d]/55 backdrop-blur-sm"
       />
 
       {/* Modal */}
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden border border-black/10">
+        <div className="relative w-full max-w-lg overflow-hidden rounded-[28px] border border-white/50 bg-[linear-gradient(145deg,rgba(255,255,255,0.97),rgba(255,247,242,0.9))] shadow-[0_28px_85px_rgba(31,19,14,0.35)]">
+          <div className="pointer-events-none absolute -left-16 -top-12 h-44 w-44 rounded-full bg-[#d8a396]/30 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-16 -right-10 h-52 w-52 rounded-full bg-[#7C3A2E]/20 blur-3xl" />
+
           {/* Close button */}
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="absolute right-3 top-3 z-10 rounded-full bg-white/90 p-2 text-black/70 hover:text-black hover:bg-white"
+            className="absolute right-4 top-4 z-10 rounded-full border border-black/10 bg-white/90 p-2 text-black/60 transition hover:bg-white hover:text-black"
           >
             <X size={18} />
           </button>
 
-          <div className="p-6">
-            <h3 className="text-xl font-semibold text-[#7C3A2E]">{title}</h3>
-            <p className="mt-2 text-sm text-black/60 leading-relaxed">{message}</p>
+          <div className="relative p-6 sm:p-8">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#7C3A2E]/20 bg-[#7C3A2E]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7C3A2E]">
+              <Sparkles size={14} />
+              Account Required
+            </span>
 
-            <div className="mt-6 flex gap-3">
+            <h3 className="mt-4 text-2xl font-display font-bold leading-tight text-[#7C3A2E]">
+              {title}
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-black/65">{message}</p>
+
+            <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <button
                 type="button"
                 onClick={onLogin}
-                className="flex-1 rounded-xl bg-[#7C3A2E] py-3 text-white font-semibold hover:bg-[#6b3127] transition"
+                className="rounded-xl bg-[#7C3A2E] py-3 text-white font-semibold shadow-sm transition hover:bg-[#6b3127]"
               >
                 Log In
               </button>
@@ -48,14 +59,22 @@ export default function AuthGateModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 rounded-xl border border-black/15 py-3 font-semibold text-black/70 hover:bg-black/5 transition"
+                className="rounded-xl border border-black/15 bg-white/70 py-3 font-semibold text-black/70 transition hover:bg-white"
               >
                 Cancel
               </button>
             </div>
 
-            <p className="mt-4 text-xs text-black/45">
-              Don’t have an account? You can sign up from the login page.
+            <p className="mt-5 text-sm text-black/55">
+              Don&apos;t have an account?{" "}
+              <button
+                type="button"
+                onClick={onSignup || onLogin}
+                className="font-semibold text-[#7C3A2E] underline-offset-2 transition hover:underline"
+              >
+                Sign up
+              </button>
+              {" "}here.
             </p>
           </div>
         </div>
