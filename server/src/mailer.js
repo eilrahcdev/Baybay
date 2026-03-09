@@ -9,7 +9,7 @@ function normalizeEmail(value) {
 }
 
 function isValidEmail(value) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean(value));
 }
 
 function getBrandConfig() {
@@ -24,6 +24,7 @@ function getBrandConfig() {
 
 function layoutEmail({ title, subtitle, bodyHtml, footerHtml = "" }) {
   const brand = getBrandConfig();
+
   const logoBlock = brand.logoUrl
     ? `<img src="${brand.logoUrl}" alt="${brand.appName} logo" style="height:40px;width:auto;display:block;" />`
     : `<div style="font-size:20px;font-weight:700;letter-spacing:0.08em;color:${brand.accent};">${brand.appName}</div>`;
@@ -49,7 +50,10 @@ function layoutEmail({ title, subtitle, bodyHtml, footerHtml = "" }) {
       </tr>
       <tr>
         <td style="padding:16px 24px;border-top:1px solid #f4ebe7;background:#fffaf7;color:#7b6a63;font-size:12px;line-height:1.5;">
-          ${footerHtml || `Need help? Contact us at <a href="mailto:${brand.supportEmail}" style="color:${brand.accent};">${brand.supportEmail}</a>.`}
+          ${
+            footerHtml ||
+            `Need help? Contact us at <a href="mailto:${brand.supportEmail}" style="color:${brand.accent};">${brand.supportEmail}</a>.`
+          }
         </td>
       </tr>
     </table>
@@ -57,20 +61,25 @@ function layoutEmail({ title, subtitle, bodyHtml, footerHtml = "" }) {
 }
 
 export function createMailer() {
-  const user = (process.env.SMTP_USER || "").trim();
+  const user = clean(process.env.SMTP_USER);
   const isGmail = user.toLowerCase().endsWith("@gmail.com");
-  const host =
-    process.env.SMTP_HOST ||
-    (isGmail ? "smtp.gmail.com" : "");
+  const host = clean(process.env.SMTP_HOST || (isGmail ? "smtp.gmail.com" : ""));
   const port = Number(process.env.SMTP_PORT || (isGmail ? "465" : "587"));
   const secure = process.env.SMTP_SECURE
     ? process.env.SMTP_SECURE === "true"
     : port === 465;
-  const pass = String(process.env.SMTP_PASS || "").replace(/\s+/g, "");
+  const pass = clean(process.env.SMTP_PASS).replace(/\s+/g, "");
 
   if (!host || !user || !pass) {
-    throw new Error("Missing SMTP settings. Set SMTP_USER, SMTP_PASS, and SMTP_HOST (or use Gmail).");
+    throw new Error("Missing SMTP settings. Set SMTP_USER, SMTP_PASS, and SMTP_HOST.");
   }
+
+  console.log("[MAILER] create transport", {
+    host,
+    port,
+    secure,
+    user,
+  });
 
   return nodemailer.createTransport({
     host,
@@ -82,8 +91,8 @@ export function createMailer() {
 }
 
 function resolveFromAddress() {
-  const smtpUser = (process.env.SMTP_USER || "").trim();
-  const configured = (process.env.MAIL_FROM || "").trim();
+  const smtpUser = clean(process.env.SMTP_USER);
+  const configured = clean(process.env.MAIL_FROM);
   const appName = process.env.APP_NAME || "BAYBAY";
 
   if (!smtpUser) return configured;
@@ -92,7 +101,6 @@ function resolveFromAddress() {
   const isGmail = smtpUser.toLowerCase().endsWith("@gmail.com");
   if (!isGmail) return configured;
 
-  // Gmail SMTP rejects unauthenticated sender domains.
   const containsSender = configured.toLowerCase().includes(smtpUser.toLowerCase());
   if (containsSender) return configured;
 
@@ -111,6 +119,8 @@ async function sendMailWithRetry(message, retryCount = 1) {
     } catch (err) {
       lastError = err;
       attempt += 1;
+      console.error("[MAILER] send attempt failed", err?.message || err);
+
       if (attempt > retryCount) break;
       await new Promise((resolve) => setTimeout(resolve, 600));
     }
@@ -165,6 +175,13 @@ If you did not request this, you can ignore this email.`;
     bodyHtml,
   });
 
+  console.log("[MAILER] sending OTP", {
+    to: recipient,
+    purpose,
+    from,
+    envelopeFrom,
+  });
+
   const info = await sendMailWithRetry(
     {
       from,
@@ -172,7 +189,6 @@ If you did not request this, you can ignore this email.`;
       subject,
       text,
       html,
-      // Force SMTP RCPT TO to target recipient instead of inferring unexpectedly.
       envelope: {
         from: envelopeFrom,
         to: [recipient],
@@ -183,6 +199,7 @@ If you did not request this, you can ignore this email.`;
 
   const accepted = Array.isArray(info?.accepted) ? info.accepted : [];
   const rejected = Array.isArray(info?.rejected) ? info.rejected : [];
+
   console.log(
     `OTP email send result: to=${recipient} accepted=${accepted.join(",") || "-"} rejected=${
       rejected.join(",") || "-"
@@ -230,6 +247,12 @@ If you did not request this, you can ignore this email.`;
     bodyHtml,
   });
 
+  console.log("[MAILER] sending reset link", {
+    to: recipient,
+    from,
+    envelopeFrom,
+  });
+
   const info = await sendMailWithRetry(
     {
       from,
@@ -247,9 +270,10 @@ If you did not request this, you can ignore this email.`;
 
   const accepted = Array.isArray(info?.accepted) ? info.accepted : [];
   const rejected = Array.isArray(info?.rejected) ? info.rejected : [];
+
   console.log(
     `Reset email send result: to=${recipient} accepted=${accepted.join(",") || "-"} rejected=${
       rejected.join(",") || "-"
     }`
   );
-}
+} 

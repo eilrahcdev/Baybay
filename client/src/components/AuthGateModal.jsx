@@ -22,7 +22,7 @@ export default function AuthGateModal({
 
       {/* Modal */}
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="relative w-full max-w-lg overflow-hidden rounded-[28px] border border-white/50 bg-[linear-gradient(145deg,rgba(255,255,255,0.97),rgba(255,247,242,0.9))] shadow-[0_28px_85px_rgba(31,19,14,0.35)]">
+        <div className="relative max-h-[calc(100vh-2rem)] w-full max-w-lg overflow-y-auto rounded-[28px] border border-white/50 bg-[linear-gradient(145deg,rgba(255,255,255,0.97),rgba(255,247,242,0.9))] shadow-[0_28px_85px_rgba(31,19,14,0.35)]">
           <div className="pointer-events-none absolute -left-16 -top-12 h-44 w-44 rounded-full bg-[#d8a396]/30 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-16 -right-10 h-52 w-52 rounded-full bg-[#7C3A2E]/20 blur-3xl" />
 

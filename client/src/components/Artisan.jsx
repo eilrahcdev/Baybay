@@ -84,7 +84,7 @@ export default function Artisan({ artisans = [], loading = false, onViewDetails 
 
         {loading ? (
           <div className="grid gap-8 rounded-[30px] border border-black/10 bg-white/90 p-5 shadow-[0_20px_50px_rgba(20,14,12,0.09)] sm:p-7 lg:grid-cols-[1.05fr_1fr] lg:gap-10">
-            <div className="h-[320px] w-full animate-pulse rounded-3xl bg-gray-200 sm:h-[380px]" />
+            <div className="aspect-square w-full animate-pulse rounded-3xl bg-gray-200" />
             <div className="space-y-4 py-2">
               <div className="h-5 w-28 animate-pulse rounded bg-gray-200" />
               <div className="h-10 w-3/4 animate-pulse rounded bg-gray-200" />
@@ -125,11 +125,11 @@ export default function Artisan({ artisans = [], loading = false, onViewDetails 
             )}
 
             <div className="grid gap-0 lg:grid-cols-[1.05fr_1fr]">
-              <div className="relative bg-black/5">
+              <div className="relative bg-black/5 aspect-square">
                 <img
                   src={current.image}
                   alt={current.name}
-                  className="h-[320px] w-full object-cover sm:h-[390px] lg:h-full lg:min-h-[460px]"
+                  className="absolute inset-0 h-full w-full object-cover"
                   loading="lazy"
                   onError={(e) => {
                     console.error("Failed artisan image:", current);

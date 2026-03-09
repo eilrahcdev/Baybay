@@ -40,7 +40,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="page-shell relative flex min-h-screen items-center justify-center px-6 py-12">
+    <div className="page-shell relative flex min-h-screen items-start justify-center px-4 py-8 sm:items-center sm:px-6 sm:py-12">
       <div className="pointer-events-none absolute left-4 top-8 h-40 w-40 rounded-full bg-[#e8c3b8]/45 blur-3xl" />
       <div className="pointer-events-none absolute bottom-8 right-6 h-44 w-44 rounded-full bg-[#7C3A2E]/20 blur-3xl" />
 
@@ -48,7 +48,7 @@ export default function ForgotPassword() {
         <div className="relative overflow-hidden rounded-[28px] border border-white/65 bg-white/88 p-6 shadow-[0_24px_64px_rgba(28,17,13,0.16)] backdrop-blur-xl sm:p-8">
           <div className="pointer-events-none absolute -right-12 -top-14 h-28 w-28 rounded-full bg-[#7C3A2E]/10 blur-2xl" />
 
-          <h2 className="text-center font-display text-4xl text-[#7C3A2E]">Forgot password</h2>
+          <h2 className="text-center font-display text-3xl text-[#7C3A2E] sm:text-4xl">Forgot password</h2>
           <p className="mt-2 text-center text-sm text-black/60">
             Enter your email and we will send a 6-digit OTP code.
           </p>
@@ -69,7 +69,7 @@ export default function ForgotPassword() {
                   <p className="font-semibold text-[#7C3A2E]">Check your email</p>
                   <p className="mt-1 text-sm text-black/65">
                     If this email is registered, a 6-digit reset code has been sent to{" "}
-                    <span className="font-medium">{email}</span>.
+                    <span className="break-all font-medium">{email}</span>.
                   </p>
 
                   <button

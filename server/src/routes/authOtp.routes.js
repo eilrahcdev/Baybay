@@ -54,6 +54,7 @@ async function invalidateActiveRecords(email, purpose) {
 async function insertOtpRecord({ email, purpose, otp }) {
   const otpHash = await bcrypt.hash(otp, 10);
   const expiresAt = otpExpiryIso();
+
   const inserted = await insertEmailOtpRecord({
     email,
     purpose,
@@ -61,7 +62,11 @@ async function insertOtpRecord({ email, purpose, otp }) {
     expiresAt,
     otpCode: otp,
   });
-  if (!inserted.ok) throw new Error(inserted.error?.message || "Failed to create OTP record.");
+
+  if (!inserted.ok) {
+    throw new Error(inserted.error?.message || "Failed to create OTP record.");
+  }
+
   return { expiresAt };
 }
 
@@ -79,14 +84,16 @@ async function markAttempt(record) {
 }
 
 async function markConsumed(record) {
-  const consumedAt = new Date();
+  const consumedAt = new Date().toISOString();
+
   await updateOtpById(record.id, {
-    consumed_at: consumedAt.toISOString(),
+    consumed_at: consumedAt,
   });
+
   await consumeActiveOtps({
     email: record.email,
     purpose: record.purpose,
-    consumedAt: consumedAt.toISOString(),
+    consumedAt,
   });
 }
 
@@ -99,20 +106,29 @@ async function verifyOtpRecord({ record, otp }) {
   await markAttempt(record);
 
   if (!ok) return { ok: false, reason: "invalid" };
+
   await markConsumed(record);
   return { ok: true };
 }
 
-// Request OTP for verification or password reset.
 router.post("/auth/request-otp", async (req, res) => {
   const parsed = requestSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: "Invalid request" });
 
-  const email = parsed.data.email.toLowerCase();
+  const email = parsed.data.email.toLowerCase().trim();
   const purpose = parsed.data.purpose;
 
   try {
+    console.log("[REQUEST OTP] start", { email, purpose });
+
     const user = await findAuthUserByEmail(email);
+
+    console.log("[REQUEST OTP] user lookup", {
+      found: Boolean(user),
+      verified: Boolean(user?.email_confirmed_at),
+      email,
+      purpose,
+    });
 
     if (purpose === "verify" && !user) {
       return res.status(404).json({ message: "No account found for this email." });
@@ -122,29 +138,33 @@ router.post("/auth/request-otp", async (req, res) => {
       return res.status(400).json({ message: "This account is already verified." });
     }
 
-    // Return generic response for reset to prevent account enumeration.
     if (purpose === "reset" && !user) {
       return res.json({ ok: true, message: "If the account exists, a code has been sent." });
     }
 
     const otp = generateOtp();
+
     await invalidateActiveRecords(email, purpose);
+    console.log("[REQUEST OTP] old OTPs invalidated", { email, purpose });
+
     await insertOtpRecord({ email, purpose, otp });
+    console.log("[REQUEST OTP] OTP stored", { email, purpose });
+
     await sendOtpEmail({ to: email, purpose, otp });
+    console.log("[REQUEST OTP] email sent", { email, purpose });
 
     return res.json({ ok: true, message: "OTP sent." });
   } catch (e) {
-    console.error("Request OTP failed:", e?.message || e);
+    console.error("[REQUEST OTP] failed:", e);
     return res.status(500).json({ message: "Failed to send OTP email. Check SMTP config." });
   }
 });
 
-// Verify OTP for account verification or reset gate.
 router.post("/auth/verify-otp", async (req, res) => {
   const parsed = verifySchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: "Invalid request" });
 
-  const email = parsed.data.email.toLowerCase();
+  const email = parsed.data.email.toLowerCase().trim();
   const purpose = parsed.data.purpose;
   const otp = parsed.data.otp;
 
@@ -168,33 +188,37 @@ router.post("/auth/verify-otp", async (req, res) => {
       const user = await findAuthUserByEmail(email);
       if (!user) return res.status(404).json({ message: "No account found." });
 
-      const verifiedAt = new Date();
+      const verifiedAt = new Date().toISOString();
+
       await updateUserByEmail(email, {
-        email_verified_at: verifiedAt.toISOString(),
+        email_verified_at: verifiedAt,
       });
+
       await updateOtpById(record.id, {
         attempts: 999,
       });
+
       await consumeActiveOtps({
         email,
         purpose: "verify",
-        consumedAt: verifiedAt.toISOString(),
+        consumedAt: verifiedAt,
       });
+
+      console.log("[VERIFY OTP] verified", { email });
     }
 
     return res.json({ ok: true, message: "OTP verified." });
   } catch (e) {
-    console.error("Verify OTP failed:", e?.message || e);
+    console.error("[VERIFY OTP] failed:", e);
     return res.status(500).json({ message: "Failed to verify OTP." });
   }
 });
 
-// Reset password using OTP + new password.
 router.post("/auth/reset-password", async (req, res) => {
   const parsed = resetSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ message: "Invalid request" });
 
-  const email = parsed.data.email.toLowerCase();
+  const email = parsed.data.email.toLowerCase().trim();
   const otp = parsed.data.otp;
   const newPassword = parsed.data.newPassword;
 
@@ -217,13 +241,16 @@ router.post("/auth/reset-password", async (req, res) => {
     if (!user) return res.status(404).json({ message: "No account found." });
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
+
     await updateUserByEmail(email, {
       password_hash: passwordHash,
     });
 
+    console.log("[RESET PASSWORD] success", { email });
+
     return res.json({ ok: true, message: "Password reset successful." });
   } catch (e) {
-    console.error("Reset password with OTP failed:", e?.message || e);
+    console.error("[RESET PASSWORD] failed:", e);
     return res.status(500).json({ message: "Failed to reset password." });
   }
 });

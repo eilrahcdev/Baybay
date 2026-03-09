@@ -9,7 +9,7 @@ export default function Heritage() {
             <div className="relative overflow-hidden rounded-2xl shadow-2xl">
               <img
                 alt="Traditional loom weaving colorful patterns"
-                className="w-full h-[560px] object-cover transition-transform duration-700 group-hover:scale-105"
+                className="h-[380px] w-full object-cover transition-transform duration-700 group-hover:scale-105 sm:h-[460px] lg:h-[560px]"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuDm7R1gtnBcz3xKtCB2RZLx1ZCKf1hhhl9LoU3-UKJEPfHiVd4SQ2wfblmphK4Nag-g7EltzB_R7lsJF-tu4J05d5eFVyv-5LIA_-89g2tq7QtYXv1fsxVtyfpGZl3Xnb6lQwUAzv__ZQzdaaGfoqqjhYt4N3jUNr6GvDA8Bsg57ItMNQA4bqbVN1P_WR4m5LIohw7Fuc72rBgxPlp7VDAF4pKQQYi_xxgBEAK9B668QXfybuZYQGqFY_RTs3ms_2B_hqBpRM5c0pc"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />

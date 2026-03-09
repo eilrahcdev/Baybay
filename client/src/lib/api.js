@@ -62,12 +62,17 @@ export const api = {
   team: () =>
     http(`/team`),
 
-  tiktokVideos: ({ featured = false, active = true, limit = 12 } = {}) =>
-    http(
-      `/tiktok-videos?featured=${featured ? "true" : "false"}&active=${
-        active ? "true" : "false"
-      }&limit=${limit}`
-    ),
+  tiktokVideos: ({ featured, active = true, limit = 12 } = {}) => {
+    const params = new URLSearchParams();
+    if (typeof featured === "boolean") {
+      params.set("featured", featured ? "true" : "false");
+    }
+    if (typeof active === "boolean") {
+      params.set("active", active ? "true" : "false");
+    }
+    params.set("limit", String(limit));
+    return http(`/tiktok-videos?${params.toString()}`);
+  },
 
   productVariants: (productId) =>
     http(`/product-variants?product_id=${productId}`),

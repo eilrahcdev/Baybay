@@ -9,7 +9,7 @@ if (!uri && !directUri) {
   throw new Error("Missing MONGODB_URI (or MONGODB_URI_DIRECT) in server/.env");
 }
 
-const uriCandidates = directUri ? [directUri] : [uri].filter(Boolean);
+const uriCandidates = [directUri, uri].filter(Boolean);
 
 let client = null;
 let dbPromise;
@@ -22,7 +22,7 @@ function buildMongoErrorMessage(error) {
       "MongoDB DNS SRV lookup failed (querySrv).",
       "Your network/DNS cannot resolve Atlas SRV records.",
       "Fix: use a standard Atlas connection string in MONGODB_URI_DIRECT (mongodb://...hosts...).",
-      "In Atlas: Database > Connect > Drivers > 'Standard connection string (not DNS seed list)'.",
+      "In Atlas: Database > Connect > Drivers > Standard connection string (not DNS seed list).",
       `Original error: ${raw}`,
     ].join(" ");
   }
@@ -38,18 +38,45 @@ function buildMongoErrorMessage(error) {
   return `MongoDB connection failed: ${raw}`;
 }
 
+function maskUri(value) {
+  const raw = String(value || "");
+  if (!raw) return "";
+  return raw.length > 48 ? `${raw.slice(0, 48)}...` : raw;
+}
+
 async function connectWithUri(nextUri) {
+  console.log("[MONGO] attempting connection", {
+    dbName,
+    uriPreview: maskUri(nextUri),
+  });
+
   const nextClient = new MongoClient(nextUri, {
     serverSelectionTimeoutMS: 12000,
     connectTimeoutMS: 12000,
   });
+
   await nextClient.connect();
   client = nextClient;
-  return nextClient.db(dbName);
+
+  const db = nextClient.db(dbName);
+
+  console.log("[MONGO] connected successfully", { dbName });
+
+  return db;
 }
 
 export async function getDb() {
   if (!dbPromise) {
+    console.log("[MONGO CONFIG]", {
+      hasUri: Boolean(uri),
+      hasDirectUri: Boolean(directUri),
+      dbName,
+      usingCandidates: uriCandidates.map((item, index) => ({
+        order: index + 1,
+        uriPreview: maskUri(item),
+      })),
+    });
+
     dbPromise = (async () => {
       let lastError;
 
@@ -58,11 +85,14 @@ export async function getDb() {
           return await connectWithUri(candidate);
         } catch (error) {
           lastError = error;
+          console.error("[MONGO] connection attempt failed", error?.message || error);
+
           try {
             await client?.close();
           } catch {
-            // Ignore close errors while trying next URI.
+            // ignore
           }
+
           client = null;
         }
       }
@@ -70,12 +100,14 @@ export async function getDb() {
       throw new Error(buildMongoErrorMessage(lastError));
     })();
   }
+
   return dbPromise;
 }
 
 export async function getCollections() {
   const db = await getDb();
-  return {
+
+  const collections = {
     users: db.collection("users"),
     emailOtps: db.collection("email_otps"),
     newsletterSubscribers: db.collection("newsletter_subscribers"),
@@ -85,6 +117,13 @@ export async function getCollections() {
     tiktokVideos: db.collection("tiktok_videos"),
     team: db.collection("team"),
   };
+
+  console.log("[MONGO] collections ready", {
+    dbName,
+    names: Object.keys(collections),
+  });
+
+  return collections;
 }
 
 export async function ensureMongoIndexes() {
@@ -97,8 +136,9 @@ export async function ensureMongoIndexes() {
     productVariants,
     tiktokVideos,
     team,
-  } =
-    await getCollections();
+  } = await getCollections();
+
+  console.log("[MONGO] ensuring indexes");
 
   await Promise.all([
     users.createIndex({ id: 1 }, { unique: true }),
@@ -124,4 +164,6 @@ export async function ensureMongoIndexes() {
     tiktokVideos.createIndex({ is_active: 1, is_featured: 1, created_at: -1 }),
     team.createIndex({ created_at: -1 }),
   ]);
+
+  console.log("[MONGO] indexes ensured");
 }

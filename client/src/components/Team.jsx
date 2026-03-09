@@ -5,8 +5,7 @@ import { resolveImageUrl } from "../lib/imageUrl";
 export default function TeamCarousel({ team = [], loading = false }) {
   const slides = useMemo(() => {
     const list = Array.isArray(team) ? team : [];
-    // Data stores one full team image per row.
-    // Treat each row as one slide.
+
     return list
       .map((t) => ({
         id: t.id,
@@ -15,19 +14,26 @@ export default function TeamCarousel({ team = [], loading = false }) {
           resolveImageUrl(
             t.image_url || t.photo_url || t.avatar_url || t.team_image,
             ""
-          ) ||
-          null,
+          ) || null,
       }))
-      .filter((s) => !!s.image);
+      .filter((s) => Boolean(s.image));
   }, [team]);
 
   const [idx, setIdx] = useState(0);
 
   useEffect(() => {
+    if (idx > Math.max(0, slides.length - 1)) {
+      setIdx(0);
+    }
+  }, [idx, slides.length]);
+
+  useEffect(() => {
     if (slides.length <= 1) return;
+
     const timer = setInterval(() => {
       setIdx((v) => (v + 1) % slides.length);
     }, 5000);
+
     return () => clearInterval(timer);
   }, [slides.length]);
 
@@ -42,51 +48,59 @@ export default function TeamCarousel({ team = [], loading = false }) {
   }
 
   return (
-    <section id="team" className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden reveal-section">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(124,58,46,0.08)_1px,transparent_1px)] [background-size:20px_20px] z-0 pointer-events-none" />
+    <section
+      id="team"
+      className="relative overflow-hidden px-4 py-20 reveal-section sm:px-6 lg:px-8"
+    >
+      <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_1px_1px,rgba(124,58,46,0.08)_1px,transparent_1px)] [background-size:20px_20px]" />
 
-      <div className="relative z-10 max-w-7xl mx-auto">
-        <div className="text-center mb-10">
-          <span className="inline-block py-1 px-3 rounded-full bg-[#7C3A2E]/10 text-[#7C3A2E] text-xs font-semibold tracking-wide uppercase mb-4">
+      <div className="relative z-10 mx-auto max-w-7xl">
+        <div className="mb-10 text-center">
+          <span className="mb-4 inline-block rounded-full bg-[#7C3A2E]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#7C3A2E]">
             The Team Behind the Screen
           </span>
 
-          <h2 className="text-4xl md:text-5xl font-display font-bold text-[#7C3A2E] mb-4">
+          <h2 className="mb-4 font-display text-4xl font-bold text-[#7C3A2E] md:text-5xl">
             Meet the Team
           </h2>
 
-          <p className="max-w-2xl mx-auto text-lg text-gray-600 leading-relaxed">
-            We are a passionate group dedicated to preserving Pangasinan’s cultural heritage through technology—connecting local artisans with the world.
+          <p className="mx-auto max-w-2xl text-lg leading-relaxed text-gray-600">
+            We are a passionate group dedicated to preserving Pangasinan's cultural
+            heritage through technology, connecting local artisans with the world.
           </p>
         </div>
 
         {loading ? (
           <div className="rounded-3xl border border-black/10 bg-white p-8 shadow-soft">
-            <div className="h-[320px] sm:h-[420px] bg-baybay-sand animate-pulse rounded-2xl" />
+            <div className="h-[320px] rounded-2xl bg-baybay-sand animate-pulse sm:h-[420px]" />
           </div>
         ) : slides.length === 0 ? (
-          <div className="max-w-2xl mx-auto text-center rounded-2xl border border-gray-200 bg-white p-10 shadow-sm">
-            <h3 className="font-display text-2xl font-bold text-gray-900">Team section is ready</h3>
+          <div className="mx-auto max-w-2xl rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-sm">
+            <h3 className="font-display text-2xl font-bold text-gray-900">
+              Team section is ready
+            </h3>
             <p className="mt-2 text-gray-600">
               Team's not found. Please check your internet connection and try again.
             </p>
           </div>
         ) : (
-          <div className="rounded-3xl border border-black/10 bg-white/80 backdrop-blur p-4 sm:p-6 shadow-soft">
-            <div className="relative overflow-hidden rounded-2xl">
+          <div className="rounded-3xl border border-black/10 bg-white/80 p-4 shadow-soft backdrop-blur sm:p-6">
+            <div className="overflow-hidden rounded-2xl">
               <img
                 src={slides[idx].image}
                 alt={slides[idx].title}
-                className="w-full h-[320px] sm:h-[460px] object-cover"
+                className="h-[280px] w-full object-cover sm:h-[380px] lg:h-[460px]"
                 loading="lazy"
               />
+            </div>
 
-              {slides.length > 1 && (
-                <>
+            {slides.length > 1 && (
+              <div className="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={prev}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/90 border border-black/10 grid place-items-center hover:bg-white transition"
+                    className="grid h-10 w-10 place-items-center rounded-full border border-black/10 bg-white text-black/70 transition hover:bg-black/5"
                     aria-label="Previous"
                   >
                     <ChevronLeft size={18} />
@@ -95,29 +109,28 @@ export default function TeamCarousel({ team = [], loading = false }) {
                   <button
                     type="button"
                     onClick={next}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/90 border border-black/10 grid place-items-center hover:bg-white transition"
+                    className="grid h-10 w-10 place-items-center rounded-full border border-black/10 bg-white text-black/70 transition hover:bg-black/5"
                     aria-label="Next"
                   >
                     <ChevronRight size={18} />
                   </button>
+                </div>
 
-                  {/* Slide dots */}
-                  <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
-                    {slides.map((s, i) => (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => setIdx(i)}
-                        className={`h-2.5 w-2.5 rounded-full transition ${
-                          i === idx ? "bg-[#7C3A2E]" : "bg-white/70"
-                        }`}
-                        aria-label={`Go to slide ${i + 1}`}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {slides.map((s, i) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setIdx(i)}
+                      className={`h-2.5 w-2.5 rounded-full transition ${
+                        i === idx ? "bg-[#7C3A2E]" : "bg-black/20"
+                      }`}
+                      aria-label={`Go to slide ${i + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

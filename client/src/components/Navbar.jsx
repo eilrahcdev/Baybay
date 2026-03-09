@@ -18,7 +18,7 @@ function LogoutConfirmModal({ open, onClose, onConfirm }) {
         className="absolute inset-0 bg-black/45 backdrop-blur-sm"
       />
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="surface-card relative w-full max-w-md overflow-hidden">
+        <div className="surface-card relative max-h-[calc(100vh-2rem)] w-full max-w-md overflow-y-auto">
           <button
             type="button"
             onClick={onClose}
@@ -210,7 +210,7 @@ export default function Navbar() {
               </span>
 
               {searchOpen && (
-                <div className="absolute right-0 z-50 mt-3 w-[420px] max-w-[90vw] overflow-hidden rounded-2xl border border-black/10 bg-white/95 shadow-2xl backdrop-blur">
+                <div className="absolute right-0 z-50 mt-3 w-[420px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-black/10 bg-white/95 shadow-2xl backdrop-blur">
                   <div className="px-4 py-3 border-b flex items-center justify-between">
                     <p className="text-sm font-semibold text-black/70">
                       Results for <span className="text-black">{query.trim()}</span>
@@ -238,7 +238,7 @@ export default function Navbar() {
                       <p className="text-sm text-black/60">No results found.</p>
                     </div>
                   ) : (
-                    <div className="max-h-[420px] overflow-auto">
+                    <div className="max-h-[65vh] overflow-auto lg:max-h-[420px]">
                       {/* Artisans */}
                       {results.artisans?.length ? (
                         <div className="p-4 border-b">

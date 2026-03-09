@@ -63,7 +63,7 @@ export default function VerifyEmailPage() {
   };
 
   return (
-    <div className="page-shell relative grid min-h-screen w-full overflow-hidden lg:grid-cols-2">
+    <div className="page-shell relative grid min-h-screen w-full lg:grid-cols-2">
       <div className="relative hidden lg:block">
         <img
           src="https://images.unsplash.com/photo-1524498250077-390f9e378fc0?w=1600"
@@ -86,7 +86,7 @@ export default function VerifyEmailPage() {
         </div>
       </div>
 
-      <div className="relative flex items-center justify-center px-6 py-10 sm:px-8">
+      <div className="relative flex items-start justify-center px-4 py-8 sm:items-center sm:px-8 sm:py-10 lg:overflow-y-auto">
         <div className="pointer-events-none absolute left-2 top-8 h-40 w-40 rounded-full bg-[#e8c3b8]/40 blur-3xl" />
         <div className="pointer-events-none absolute bottom-8 right-2 h-40 w-40 rounded-full bg-[#7C3A2E]/20 blur-3xl" />
 
@@ -97,7 +97,7 @@ export default function VerifyEmailPage() {
               Email Verification
             </span>
 
-            <h2 className="mt-4 text-center font-display text-4xl text-[#7C3A2E]">
+            <h2 className="mt-4 text-center font-display text-3xl text-[#7C3A2E] sm:text-4xl">
               Verify your email
             </h2>
             <p className="mt-2 text-center text-sm text-black/60">
@@ -149,7 +149,7 @@ export default function VerifyEmailPage() {
                   type="text"
                   inputMode="numeric"
                   placeholder="123456"
-                  className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm tracking-[0.28em] outline-none focus:border-[#7C3A2E] focus:ring-4 focus:ring-[#7C3A2E]/15"
+                  className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm tracking-[0.2em] outline-none focus:border-[#7C3A2E] focus:ring-4 focus:ring-[#7C3A2E]/15 sm:tracking-[0.28em]"
                 />
               </div>
 

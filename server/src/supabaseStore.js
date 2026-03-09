@@ -74,6 +74,9 @@ export async function getUserByEmail(email) {
   if (!target) return null;
 
   const { users } = await getCollections();
+
+  console.log("[STORE] getUserByEmail", { email: target });
+
   const doc = await users.findOne(
     { email: target },
     {
@@ -89,6 +92,9 @@ export async function getUserByEmail(email) {
       },
     }
   );
+
+  console.log("[STORE] getUserByEmail result", { found: Boolean(doc), email: target });
+
   return mapUser(doc);
 }
 
@@ -112,6 +118,7 @@ export async function getUserById(id) {
       },
     }
   );
+
   return mapUser(doc);
 }
 
@@ -121,6 +128,13 @@ export async function upsertUser({ id, fullName, email, passwordHash }) {
   const cleanAddr = cleanEmail(email);
   const cleanHash = clean(passwordHash);
 
+  console.log("[UPSERT USER] input", {
+    cleanId,
+    cleanName,
+    cleanAddr,
+    hasHash: Boolean(cleanHash),
+  });
+
   if (!cleanId || !cleanAddr || !cleanHash) {
     throw new Error("Missing required user fields for upsert.");
   }
@@ -128,7 +142,9 @@ export async function upsertUser({ id, fullName, email, passwordHash }) {
   const { users } = await getCollections();
   const now = new Date();
 
-  await users.updateOne(
+  console.log("[UPSERT USER] updateOne start", { email: cleanAddr });
+
+  const writeResult = await users.updateOne(
     { email: cleanAddr },
     {
       $set: {
@@ -146,8 +162,22 @@ export async function upsertUser({ id, fullName, email, passwordHash }) {
     { upsert: true }
   );
 
+  console.log("[UPSERT USER] updateOne result", {
+    matchedCount: writeResult?.matchedCount,
+    modifiedCount: writeResult?.modifiedCount,
+    upsertedCount: writeResult?.upsertedCount,
+    upsertedId: writeResult?.upsertedId || null,
+  });
+
   const doc = await users.findOne({ email: cleanAddr });
+  console.log("[UPSERT USER] fetched doc after write", {
+    found: Boolean(doc),
+    email: cleanAddr,
+    id: doc?.id || null,
+  });
+
   if (doc && !clean(doc.id)) {
+    console.log("[UPSERT USER] missing id in doc, patching", { email: cleanAddr, cleanId });
     await users.updateOne({ _id: doc._id }, { $set: { id: cleanId } });
     doc.id = cleanId;
   }
@@ -182,8 +212,18 @@ export async function updateUserByEmail(email, patch = {}) {
   }
   updates.updated_at = new Date();
 
+  console.log("[STORE] updateUserByEmail", {
+    email: target,
+    updateKeys: Object.keys(updates),
+  });
+
   const { users } = await getCollections();
-  await users.updateOne({ email: target }, { $set: updates });
+  const result = await users.updateOne({ email: target }, { $set: updates });
+
+  console.log("[STORE] updateUserByEmail result", {
+    matchedCount: result?.matchedCount,
+    modifiedCount: result?.modifiedCount,
+  });
 }
 
 export async function consumeActiveOtps({ email, purpose, consumedAt }) {
@@ -194,7 +234,13 @@ export async function consumeActiveOtps({ email, purpose, consumedAt }) {
   const consumedDate = toDate(consumedAt) || new Date();
   const { emailOtps } = await getCollections();
 
-  await emailOtps.updateMany(
+  console.log("[OTP STORE] consumeActiveOtps", {
+    email: target,
+    purpose: cleanPurpose,
+    consumedAt: consumedDate.toISOString(),
+  });
+
+  const result = await emailOtps.updateMany(
     {
       email: target,
       purpose: cleanPurpose,
@@ -204,6 +250,11 @@ export async function consumeActiveOtps({ email, purpose, consumedAt }) {
       $set: { consumed_at: consumedDate },
     }
   );
+
+  console.log("[OTP STORE] consumeActiveOtps result", {
+    matchedCount: result?.matchedCount,
+    modifiedCount: result?.modifiedCount,
+  });
 }
 
 export async function insertEmailOtp({ email, purpose, otpHash, expiresAt, otpCode }) {
@@ -211,6 +262,14 @@ export async function insertEmailOtp({ email, purpose, otpHash, expiresAt, otpCo
   const cleanPurpose = clean(purpose);
   const cleanHash = clean(otpHash);
   const expiresDate = toDate(expiresAt);
+
+  console.log("[OTP STORE] insertEmailOtp input", {
+    email: target,
+    purpose: cleanPurpose,
+    hasHash: Boolean(cleanHash),
+    expiresAt,
+    hasPlainOtp: Boolean(otpCode),
+  });
 
   if (!target || !cleanPurpose || !cleanHash || !expiresDate) {
     throw new Error("Missing required OTP fields.");
@@ -229,6 +288,13 @@ export async function insertEmailOtp({ email, purpose, otpHash, expiresAt, otpCo
   };
 
   const result = await emailOtps.insertOne(doc);
+
+  console.log("[OTP STORE] insertEmailOtp result", {
+    insertedId: String(result.insertedId),
+    email: target,
+    purpose: cleanPurpose,
+  });
+
   return mapOtp({ ...doc, _id: result.insertedId });
 }
 
@@ -288,6 +354,7 @@ export async function getEmailVerifiedAt(email) {
   );
 
   if (user?.email_verified_at) return toIso(user.email_verified_at);
+
   const record = await getLatestVerifiedOtp({ email: target });
   return record?.consumed_at || null;
 }
@@ -307,5 +374,12 @@ export async function updateOtpById(id, patch = {}) {
   if (Object.keys(updates).length === 0) return;
 
   const { emailOtps } = await getCollections();
-  await emailOtps.updateOne(filter, { $set: updates });
+  const result = await emailOtps.updateOne(filter, { $set: updates });
+
+  console.log("[OTP STORE] updateOtpById result", {
+    id,
+    matchedCount: result?.matchedCount,
+    modifiedCount: result?.modifiedCount,
+    updateKeys: Object.keys(updates),
+  });
 }

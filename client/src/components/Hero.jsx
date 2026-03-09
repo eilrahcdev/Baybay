@@ -49,7 +49,7 @@ export default function Hero() {
               </a>
             </div>
 
-            <div className="mt-8 grid grid-cols-3 gap-3 text-left sm:gap-4">
+            <div className="mt-8 grid grid-cols-1 gap-3 text-center sm:grid-cols-3 sm:gap-4 sm:text-left">
               <div className="rounded-2xl border border-[#7C3A2E]/15 bg-white/70 px-4 py-3">
                 <p className="text-lg font-bold text-[#7C3A2E]">Local</p>
                 <p className="text-xs text-black/60 sm:text-sm">Artisans</p>

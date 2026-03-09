@@ -60,7 +60,7 @@ export default function ProductsPage({ categories = {}, loading = false }) {
           <div className="space-y-12">
             {orderedCategories.map((cat) => (
               <div key={cat} className="surface-card p-5 sm:p-7">
-                <div className="flex items-end justify-between gap-3">
+                <div className="flex flex-wrap items-end justify-between gap-3">
                   <h2 className="text-xl sm:text-2xl font-bold text-[#7C3A2E]">{cat}</h2>
                   <span className="text-sm text-black/50">
                     {categories[cat]?.length || 0} items

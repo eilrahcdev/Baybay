@@ -82,11 +82,21 @@ function normalizeArtisan(req, doc) {
     "avatar_url",
   ]);
   const imageUrl = toPublicUrl(req, imageValue);
+  const tiktokUrl =
+    String(
+      row?.tiktok_url ||
+        row?.tiktok_link ||
+        row?.tiktok_video_url ||
+        row?.video_url ||
+        ""
+    ).trim() || null;
 
   return {
     ...row,
     image_url: imageUrl,
     artisan_image: imageUrl,
+    tiktok_url: tiktokUrl,
+    tiktok_video_url: tiktokUrl,
   };
 }
 
@@ -109,6 +119,63 @@ function normalizeTeam(req, doc) {
 
 function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+const TRUTHY_VALUES = [true, "true", 1, "1", "yes", "TRUE"];
+
+function normalizeMatchText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function compactMatchText(value) {
+  return normalizeMatchText(value).replace(/[\s-]+/g, "");
+}
+
+function toKeySet(...values) {
+  const set = new Set();
+  for (const value of values) {
+    const raw = String(value ?? "").trim();
+    if (!raw) continue;
+    set.add(raw);
+    const asNumber = Number(raw);
+    if (Number.isFinite(asNumber)) {
+      set.add(String(asNumber));
+    }
+  }
+  return set;
+}
+
+function findTiktokForArtisan(artisan, videos) {
+  const list = Array.isArray(videos) ? videos : [];
+  if (!artisan || list.length === 0) return null;
+
+  const artisanTitleCompact = compactMatchText(artisan?.title);
+  if (artisanTitleCompact) {
+    const byTitle = list.find(
+      (video) =>
+        compactMatchText(video?.title) === artisanTitleCompact ||
+        compactMatchText(video?.artisan_title) === artisanTitleCompact
+    );
+    if (byTitle) return byTitle;
+  }
+
+  const artisanKeySet = toKeySet(artisan?.id, artisan?.artisan_id);
+  if (artisanKeySet.size > 0) {
+    const byId = list.find((video) => {
+      const videoKeySet = toKeySet(video?.artisan_id);
+      if (videoKeySet.size === 0) return false;
+      for (const k of artisanKeySet) {
+        if (videoKeySet.has(k)) return true;
+      }
+      return false;
+    });
+    if (byId) return byId;
+  }
+  return null;
 }
 
 router.post("/newsletter/subscribe", async (req, res) => {
@@ -158,15 +225,41 @@ router.get("/products", async (req, res) => {
 router.get("/artisans", async (req, res) => {
   try {
     const featured = String(req.query.featured || "").toLowerCase() === "true";
-    const { artisans } = await getCollections();
+    const { artisans, tiktokVideos } = await getCollections();
     const filter = featured ? { is_featured: true } : {};
     let rows = await artisans.find(filter).sort({ created_at: -1 }).toArray();
+    const videos = await tiktokVideos
+      .find({ is_active: { $in: TRUTHY_VALUES } })
+      .project({ id: 1, artisan_id: 1, title: 1, artisan_title: 1, video_url: 1, tiktok_url: 1 })
+      .toArray();
 
     if (featured && (!rows || rows.length === 0)) {
       rows = await artisans.find({}).sort({ created_at: -1 }).limit(8).toArray();
     }
 
-    return res.json((rows || []).map((row) => normalizeArtisan(req, row)));
+    return res.json(
+      (rows || []).map((row) => {
+        const artisan = normalizeArtisan(req, row);
+        const matchedVideo = findTiktokForArtisan(artisan, videos);
+        const matchedUrl =
+          String(
+            matchedVideo?.video_url ||
+              matchedVideo?.tiktok_url ||
+              matchedVideo?.url ||
+              matchedVideo?.link ||
+              matchedVideo?.tiktok_link ||
+              ""
+          ).trim() || null;
+
+        if (!matchedUrl) return artisan;
+
+        return {
+          ...artisan,
+          tiktok_url: artisan?.tiktok_url || matchedUrl,
+          tiktok_video_url: artisan?.tiktok_video_url || matchedUrl,
+        };
+      })
+    );
   } catch (e) {
     return res.status(500).json({ message: e.message || "Server error" });
   }
@@ -288,12 +381,26 @@ router.get("/tiktok-videos", async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit || "12", 10), 100);
 
     const filter = {};
-    if (onlyFeatured) filter.is_featured = true;
-    if (onlyActive) filter.is_active = true;
+    if (onlyFeatured) filter.is_featured = { $in: TRUTHY_VALUES };
+    if (onlyActive) filter.is_active = { $in: TRUTHY_VALUES };
 
     const { tiktokVideos } = await getCollections();
     const rows = await tiktokVideos.find(filter).sort({ created_at: -1 }).limit(limit).toArray();
-    return res.json((rows || []).map(withId));
+    return res.json(
+      (rows || []).map((row) => {
+        const item = withId(row);
+        return {
+          ...item,
+          video_url:
+            item.video_url ||
+            item.tiktok_url ||
+            item.url ||
+            item.link ||
+            item.tiktok_link ||
+            null,
+        };
+      })
+    );
   } catch (e) {
     return res.status(500).json({ message: e.message || "Server error" });
   }

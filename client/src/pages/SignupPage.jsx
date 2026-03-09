@@ -114,7 +114,7 @@ function LegalModal({ open, onClose, initialTab = "terms", onAgree }) {
         aria-label="Close modal backdrop"
       />
 
-      <div className="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-black/10 bg-white shadow-2xl">
+      <div className="relative flex max-h-[calc(100vh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-black/10 bg-white shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-black/10 px-5 py-4 sm:px-6">
           <div className="flex items-center gap-2">
@@ -145,7 +145,7 @@ function LegalModal({ open, onClose, initialTab = "terms", onAgree }) {
 
         {/* Tabs */}
         <div className="px-5 pt-4 sm:px-6">
-          <div className="inline-flex rounded-2xl border border-black/10 bg-black/5 p-1">
+          <div className="inline-flex flex-wrap rounded-2xl border border-black/10 bg-black/5 p-1">
             <button
               type="button"
               onClick={() => setTab("terms")}
@@ -174,25 +174,21 @@ function LegalModal({ open, onClose, initialTab = "terms", onAgree }) {
         </div>
 
         {/* Body (scroll area) */}
-        <div
-          ref={scrollRef}
-          onScroll={handleScroll}
-          className="max-h-[60vh] overflow-auto px-5 py-4 sm:px-6"
-        >
+        <div ref={scrollRef} onScroll={handleScroll} className="min-h-0 flex-1 overflow-auto px-5 py-4 sm:px-6">
           {tab === "terms" ? TERMS_CONTENT : PRIVACY_CONTENT}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-3 border-t border-black/10 bg-black/[0.02] px-5 py-4 sm:px-6">
+        <div className="flex flex-col items-start justify-between gap-3 border-t border-black/10 bg-black/[0.02] px-5 py-4 sm:flex-row sm:items-center sm:px-6">
           <p className="text-xs text-black/55">
             {canAgree ? "You can agree now." : "Scroll to the bottom to continue."}
           </p>
 
-          <div className="flex items-center gap-3">
+          <div className="flex w-full items-center gap-3 sm:w-auto">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-black/70 transition hover:bg-black/5"
+              className="flex-1 rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-black/70 transition hover:bg-black/5 sm:flex-none"
             >
               Close
             </button>
@@ -204,7 +200,7 @@ function LegalModal({ open, onClose, initialTab = "terms", onAgree }) {
                 onAgree?.();
                 onClose?.();
               }}
-              className="rounded-xl bg-[#7C3A2E] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#6b3127] disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex-1 rounded-xl bg-[#7C3A2E] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#6b3127] disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none"
             >
               I Agree
             </button>
@@ -316,7 +312,7 @@ export default function Signup() {
   };
 
   return (
-    <div className="page-shell relative grid min-h-screen w-full overflow-hidden lg:h-screen lg:grid-cols-2 lg:overflow-hidden">
+    <div className="page-shell relative grid min-h-screen w-full lg:h-screen lg:grid-cols-2 lg:overflow-hidden">
       {/* Left image */}
       <div className="relative hidden lg:block lg:h-screen">
         <img
@@ -341,7 +337,7 @@ export default function Signup() {
       </div>
 
       {/* Right form */}
-      <div className="relative flex items-center justify-center px-6 py-10 sm:px-8 lg:h-screen lg:overflow-y-auto">
+      <div className="relative flex items-start justify-center px-4 py-8 sm:items-center sm:px-8 sm:py-10 lg:h-screen lg:overflow-y-auto">
         <div className="pointer-events-none absolute left-2 top-8 h-40 w-40 rounded-full bg-[#e8c3b8]/40 blur-3xl" />
         <div className="pointer-events-none absolute bottom-8 right-2 h-40 w-40 rounded-full bg-[#7C3A2E]/20 blur-3xl" />
 
@@ -354,7 +350,7 @@ export default function Signup() {
               Create Account
             </span>
 
-            <h2 className="mt-4 text-center font-display text-4xl text-[#7C3A2E]">
+            <h2 className="mt-4 text-center font-display text-3xl text-[#7C3A2E] sm:text-4xl">
               Welcome to Baybay!
             </h2>
             <p className="mt-2 text-center text-sm text-black/60">
@@ -377,7 +373,7 @@ export default function Signup() {
                     <p className="font-semibold text-[#7C3A2E]">Verify your email</p>
                     <p className="mt-1 text-sm text-black/65">
                       We sent a 6-digit verification code to{" "}
-                      <span className="font-medium">{email}</span>. Enter the code to activate
+                      <span className="break-all font-medium">{email}</span>. Enter the code to activate
                       your account.
                     </p>
 

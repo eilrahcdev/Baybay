@@ -64,7 +64,11 @@ export default function ProductQuickViewModal({ product, onClose }) {
 
   const name = product?.name || product?.title || "Product";
   const img = resolveImageUrl(
-    product?.image_url || product?.product_image || product?.image || product?.img || product?.photo_url,
+    product?.image_url ||
+      product?.product_image ||
+      product?.image ||
+      product?.img ||
+      product?.photo_url,
     fallbackImage
   );
 
@@ -80,7 +84,7 @@ export default function ProductQuickViewModal({ product, onClose }) {
       />
 
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="relative w-full max-w-3xl rounded-2xl bg-white shadow-2xl overflow-hidden">
+        <div className="relative max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
           <button
             type="button"
             onClick={onClose}
@@ -111,7 +115,7 @@ export default function ProductQuickViewModal({ product, onClose }) {
               )}
             </div>
 
-            <div className="p-6">
+            <div className="p-5 sm:p-6">
               <h3 className="text-2xl font-semibold text-[#7C3A2E]">{name}</h3>
 
               {displayPrice != null && (
@@ -142,10 +146,6 @@ export default function ProductQuickViewModal({ product, onClose }) {
                   <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {variants.map((v) => {
                       const active = String(v.id) === String(selectedVariantId);
-                      const variantImage = resolveImageUrl(
-                        v?.image_url || v?.variant_image || v?.image || v?.img || v?.photo_url || img,
-                        img || fallbackImage
-                      );
 
                       return (
                         <button
@@ -160,28 +160,15 @@ export default function ProductQuickViewModal({ product, onClose }) {
                           ].join(" ")}
                         >
                           <div className="flex items-center justify-between gap-3">
-                            <div className="flex min-w-0 items-center gap-3">
-                              <img
-                                src={variantImage}
-                                alt={v.variant_name || "Variant"}
-                                className="h-12 w-12 shrink-0 rounded-lg object-cover border border-black/10 bg-black/5"
-                                loading="lazy"
-                                onError={(e) => {
-                                  if (e.currentTarget.src !== fallbackImage) {
-                                    e.currentTarget.src = fallbackImage;
-                                  }
-                                }}
-                              />
-                              <div className="min-w-0">
-                                <p className="font-semibold text-black/80 truncate">
-                                  {v.variant_name}
+                            <div className="min-w-0">
+                              <p className="font-semibold text-black/80 truncate">
+                                {v.variant_name}
+                              </p>
+                              {v.weight_kg != null && (
+                                <p className="text-xs text-black/50 mt-0.5">
+                                  {Number(v.weight_kg)} kg
                                 </p>
-                                {v.weight_kg != null && (
-                                  <p className="text-xs text-black/50 mt-0.5">
-                                    {Number(v.weight_kg)} kg
-                                  </p>
-                                )}
-                              </div>
+                              )}
                             </div>
 
                             <p className="font-semibold text-[#7C3A2E] whitespace-nowrap">
@@ -204,4 +191,4 @@ export default function ProductQuickViewModal({ product, onClose }) {
       </div>
     </div>
   );
-}
+} 

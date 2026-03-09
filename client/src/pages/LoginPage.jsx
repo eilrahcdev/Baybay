@@ -56,7 +56,7 @@ export default function Login() {
   };
 
   return (
-    <div className="page-shell relative grid min-h-screen w-full overflow-hidden lg:h-screen lg:grid-cols-2 lg:overflow-hidden">
+    <div className="page-shell relative grid min-h-screen w-full lg:h-screen lg:grid-cols-2 lg:overflow-hidden">
       {/* Left image */}
       <div className="relative hidden lg:block lg:h-screen">
         <img
@@ -83,7 +83,7 @@ export default function Login() {
       </div>
 
       {/* Right form */}
-      <div className="relative flex items-center justify-center px-6 py-10 sm:px-8 lg:h-screen lg:overflow-y-auto">
+      <div className="relative flex items-start justify-center px-4 py-8 sm:items-center sm:px-8 sm:py-10 lg:h-screen lg:overflow-y-auto">
         <div className="pointer-events-none absolute left-2 top-8 h-40 w-40 rounded-full bg-[#e8c3b8]/40 blur-3xl" />
         <div className="pointer-events-none absolute bottom-8 right-2 h-40 w-40 rounded-full bg-[#7C3A2E]/20 blur-3xl" />
 
@@ -96,7 +96,7 @@ export default function Login() {
               Account Login
             </span>
 
-            <h2 className="mt-4 text-center font-display text-4xl text-[#7C3A2E]">
+            <h2 className="mt-4 text-center font-display text-3xl text-[#7C3A2E] sm:text-4xl">
               Welcome back to Baybay!
             </h2>
             <p className="mt-2 text-center text-sm text-black/60">

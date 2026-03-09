@@ -71,13 +71,13 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="page-shell relative flex min-h-screen items-center justify-center px-6 py-12">
+    <div className="page-shell relative flex min-h-screen items-start justify-center px-4 py-8 sm:items-center sm:px-6 sm:py-12">
       <div className="pointer-events-none absolute left-4 top-8 h-40 w-40 rounded-full bg-[#e8c3b8]/45 blur-3xl" />
       <div className="pointer-events-none absolute bottom-8 right-6 h-44 w-44 rounded-full bg-[#7C3A2E]/20 blur-3xl" />
 
       <div className="w-full max-w-xl">
         <div className="relative overflow-hidden rounded-[28px] border border-white/65 bg-white/88 p-6 shadow-[0_24px_64px_rgba(28,17,13,0.16)] backdrop-blur-xl sm:p-8">
-          <h2 className="text-center font-display text-4xl text-[#7C3A2E]">Reset password</h2>
+          <h2 className="text-center font-display text-3xl text-[#7C3A2E] sm:text-4xl">Reset password</h2>
           <p className="mt-2 text-center text-sm text-black/60">
             Enter your email, OTP code, and new password.
           </p>
@@ -127,7 +127,7 @@ export default function ResetPassword() {
                 type="text"
                 inputMode="numeric"
                 placeholder="123456"
-                className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm tracking-[0.3em] outline-none focus:border-[#7C3A2E] focus:ring-4 focus:ring-[#7C3A2E]/15"
+                className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm tracking-[0.2em] outline-none focus:border-[#7C3A2E] focus:ring-4 focus:ring-[#7C3A2E]/15 sm:tracking-[0.3em]"
               />
             </div>
 
