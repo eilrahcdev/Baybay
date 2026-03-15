@@ -4,6 +4,13 @@ import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 import { api } from "../lib/api";
 import { getFriendlyError } from "../lib/friendlyErrors";
 import { useAuth } from "../auth/AuthProvider";
+import {
+  INPUT_LIMITS,
+  isValidEmail,
+  normalizeEmail,
+  sanitizeEmailInput,
+  sanitizePasswordInput,
+} from "../lib/inputValidation";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -20,17 +27,21 @@ export default function Login() {
 
   const handleChange = (e) => {
     setError("");
-    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    const nextValue =
+      name === "email" ? sanitizeEmailInput(value) : sanitizePasswordInput(value);
+    setForm((p) => ({ ...p, [name]: nextValue }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    const email = form.email.trim().toLowerCase();
+    const email = normalizeEmail(form.email);
     const password = form.password;
 
     if (!email || !password) return setError("Please enter your email and password.");
+    if (!isValidEmail(email)) return setError("Please enter a valid email address.");
 
     setLoading(true);
     try {
@@ -122,6 +133,8 @@ export default function Login() {
                     placeholder="juandelacruz@gmail.com"
                     className="w-full bg-transparent px-3 py-3 text-sm outline-none"
                     required
+                    maxLength={INPUT_LIMITS.EMAIL_MAX}
+                    autoComplete="email"
                   />
                 </div>
               </div>
@@ -138,6 +151,8 @@ export default function Login() {
                     placeholder="Enter your password"
                     className="w-full bg-transparent px-3 py-3 pr-12 text-sm outline-none"
                     required
+                    maxLength={INPUT_LIMITS.PASSWORD_MAX}
+                    autoComplete="current-password"
                   />
                   <button
                     type="button"

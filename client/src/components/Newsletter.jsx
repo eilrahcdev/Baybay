@@ -1,4 +1,10 @@
 import { useState } from "react";
+import {
+  INPUT_LIMITS,
+  isValidEmail,
+  normalizeEmail,
+  sanitizeEmailInput,
+} from "../lib/inputValidation";
 
 export default function Newsletter({ onSubscribe }) {
   const [email, setEmail] = useState("");
@@ -6,11 +12,12 @@ export default function Newsletter({ onSubscribe }) {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    const cleanEmail = normalizeEmail(email);
+    if (!isValidEmail(cleanEmail)) return;
 
     try {
       setBusy(true);
-      await onSubscribe(email.trim());
+      await onSubscribe(cleanEmail);
       setEmail("");
     } finally {
       setBusy(false);
@@ -31,10 +38,12 @@ export default function Newsletter({ onSubscribe }) {
         <form onSubmit={submit} className="flex w-full md:max-w-md gap-2">
           <input
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setEmail(sanitizeEmailInput(e.target.value))}
             type="email"
             placeholder="you@example.com"
             className="flex-1 rounded-full px-4 py-3 text-baybay-ink outline-none"
+            maxLength={INPUT_LIMITS.EMAIL_MAX}
+            required
           />
           <button
             disabled={busy}

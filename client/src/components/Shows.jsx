@@ -8,7 +8,10 @@ export default function Shows({
   onViewAll,
 }) {
   return (
-    <section id="products" className="py-14 sm:py-18">
+    <section
+      id="products"
+      className="relative -mt-1 bg-[linear-gradient(180deg,#fef7f1_0%,#fcf3ec_100%)] pt-0 pb-14 sm:pb-18"
+    >
       <div className="container">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
           <div>
@@ -50,7 +53,12 @@ export default function Shows({
             </div>
           </div>
 
-          <ProductGrid products={featured} loading={loading} onQuickView={onQuickView} />
+          <ProductGrid
+            products={featured}
+            loading={loading}
+            onQuickView={onQuickView}
+            gridClassName="grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-3"
+          />
 
           {!loading && featured.length === 0 && (
             <p className="mt-4 text-sm text-black/55">

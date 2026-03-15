@@ -12,6 +12,42 @@ function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean(value));
 }
 
+function normalizeAddressList(value) {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (typeof item === "string") return normalizeEmail(item);
+      if (item && typeof item === "object" && typeof item.address === "string") {
+        return normalizeEmail(item.address);
+      }
+      return "";
+    })
+    .filter(Boolean);
+}
+
+function assertRecipientAccepted({ recipient, info, kind }) {
+  const normalizedRecipient = normalizeEmail(recipient);
+  const accepted = normalizeAddressList(info?.accepted);
+  const rejected = normalizeAddressList(info?.rejected);
+  const recipientAccepted = accepted.includes(normalizedRecipient);
+  const recipientRejected = rejected.includes(normalizedRecipient);
+
+  if (!recipientAccepted || recipientRejected) {
+    const response = clean(info?.response);
+    const acceptedLabel = accepted.join(",") || "-";
+    const rejectedLabel = rejected.join(",") || "-";
+
+    throw new Error(
+      `${kind} was not accepted by SMTP for ${normalizedRecipient}. accepted=${acceptedLabel} rejected=${rejectedLabel}${
+        response ? ` response=${response}` : ""
+      }`
+    );
+  }
+
+  return { accepted, rejected };
+}
+
 function getBrandConfig() {
   return {
     appName: process.env.APP_NAME || "BAYBAY",
@@ -68,6 +104,9 @@ export function createMailer() {
   const secure = process.env.SMTP_SECURE
     ? process.env.SMTP_SECURE === "true"
     : port === 465;
+  const rejectUnauthorized = process.env.SMTP_TLS_REJECT_UNAUTHORIZED
+    ? process.env.SMTP_TLS_REJECT_UNAUTHORIZED !== "false"
+    : true;
   const pass = clean(process.env.SMTP_PASS).replace(/\s+/g, "");
 
   if (!host || !user || !pass) {
@@ -79,6 +118,7 @@ export function createMailer() {
     port,
     secure,
     user,
+    rejectUnauthorized,
   });
 
   return nodemailer.createTransport({
@@ -86,7 +126,7 @@ export function createMailer() {
     port,
     secure,
     auth: { user, pass },
-    tls: { rejectUnauthorized: true },
+    tls: { rejectUnauthorized },
   });
 }
 
@@ -197,8 +237,11 @@ If you did not request this, you can ignore this email.`;
     1
   );
 
-  const accepted = Array.isArray(info?.accepted) ? info.accepted : [];
-  const rejected = Array.isArray(info?.rejected) ? info.rejected : [];
+  const { accepted, rejected } = assertRecipientAccepted({
+    recipient,
+    info,
+    kind: "OTP email",
+  });
 
   console.log(
     `OTP email send result: to=${recipient} accepted=${accepted.join(",") || "-"} rejected=${
@@ -268,8 +311,11 @@ If you did not request this, you can ignore this email.`;
     1
   );
 
-  const accepted = Array.isArray(info?.accepted) ? info.accepted : [];
-  const rejected = Array.isArray(info?.rejected) ? info.rejected : [];
+  const { accepted, rejected } = assertRecipientAccepted({
+    recipient,
+    info,
+    kind: "Reset email",
+  });
 
   console.log(
     `Reset email send result: to=${recipient} accepted=${accepted.join(",") || "-"} rejected=${

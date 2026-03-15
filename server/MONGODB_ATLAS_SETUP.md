@@ -49,6 +49,17 @@ npm install
 npm run dev
 ```
 
+Use local API in development so signup/login/OTP writes to your Atlas DB:
+
+```env
+# client/.env
+VITE_API_BASE_URL=http://localhost:5000
+# Optional for deployed frontend builds:
+# VITE_API_URL=https://baybay.onrender.com/api
+```
+
+If `VITE_API_URL` points to a deployed server during local testing, your local Atlas database may appear empty.
+
 ## 6) Verify end-to-end flow
 1. Sign up with a new email.
 2. Confirm row exists in MongoDB `users`.
@@ -62,3 +73,4 @@ npm run dev
 - Atlas `Network Access` allows your backend IP.
 - Atlas DB user has `readWrite` on `Baybay`.
 - URI password is URL-safe (or URL-encoded).
+- SMTP credentials are valid and logs show OTP send `accepted=<recipient>` (not rejected).

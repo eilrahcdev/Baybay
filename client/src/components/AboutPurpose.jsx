@@ -51,9 +51,9 @@ function ProductCircleCluster({ items }) {
   const pics = items?.slice(0, 6) ?? [];
 
   return (
-    <div className="w-full max-w-[560px] mx-auto">
+    <div className="w-full max-w-[360px] sm:max-w-[560px] mx-auto">
       {/* Outer frame */}
-      <div className="relative rounded-[26px] border border-white/15 bg-white/5 p-4 sm:p-5 overflow-hidden">
+      <div className="relative rounded-[24px] border border-white/15 bg-white/5 p-3 sm:p-5 overflow-hidden">
         {/* Soft glow */}
         <div className="absolute -inset-10 bg-white/10 blur-3xl pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10 pointer-events-none" />
@@ -67,7 +67,7 @@ function ProductCircleCluster({ items }) {
           }}
         />
 
-        <div className="relative grid grid-cols-2 gap-3 sm:gap-4 justify-items-center">
+        <div className="relative grid grid-cols-3 gap-2 sm:gap-4 justify-items-center">
           {pics.map((pic, index) => (
             <CollageTile
               key={pic?.src || pic?.alt || index}
@@ -86,7 +86,7 @@ function CollageTile({ src, alt }) {
   return (
     <div
       className={[
-        "relative h-28 sm:h-32 md:h-36 w-full overflow-hidden rounded-2xl",
+        "relative h-20 sm:h-32 md:h-36 w-full overflow-hidden rounded-xl sm:rounded-2xl",
         "border border-white/20 bg-white/10",
         "shadow-[0_14px_30px_rgba(0,0,0,0.25)]",
         "group",
@@ -120,7 +120,10 @@ export default function AboutPurpose() {
   ];
 
   return (
-    <section id="about" className="py-12 sm:py-16 px-4 sm:px-6">
+    <section
+      id="about"
+      className="relative -mt-1 bg-[linear-gradient(180deg,#fff8f3_0%,#fffaf6_55%,#fef7f1_100%)] pt-12 pb-0 sm:pt-16 px-4 sm:px-6"
+    >
       <div className="max-w-7xl mx-auto">
         {/* Hero card */}
         <div

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { resolveImageUrl } from "../lib/imageUrl";
+import { getProductOwnerLabel } from "../lib/artisanAlias";
 
 function ProductCard({ item, onQuickView }) {
   const fallbackImage =
@@ -13,6 +14,7 @@ function ProductCard({ item, onQuickView }) {
   const name = item.name || item.title || "Product";
   const description = item.description || "No description.";
   const price = item.price ?? 0;
+  const ownerLabel = getProductOwnerLabel(item);
 
   return (
     <div
@@ -22,7 +24,7 @@ function ProductCard({ item, onQuickView }) {
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onQuickView?.(item)}
     >
-      <div className="relative w-full aspect-[4/3] bg-black/5">
+      <div className="relative w-full aspect-[5/4] bg-black/5 sm:aspect-[4/3]">
         <img
           src={image}
           alt={name}
@@ -37,13 +39,18 @@ function ProductCard({ item, onQuickView }) {
         />
       </div>
 
-      <div className="p-4">
-        <h4 className="font-semibold leading-snug line-clamp-1">{name}</h4>
+      <div className="p-3 sm:p-4">
+        {ownerLabel && (
+          <p className="text-[11px] font-semibold tracking-[0.02em] text-[#7C3A2E] sm:text-xs">
+            {ownerLabel}
+          </p>
+        )}
+        <h4 className="mt-1 text-sm font-semibold leading-snug line-clamp-1 sm:text-base">{name}</h4>
 
-        <p className="mt-1 text-sm text-black/65 line-clamp-2">{description}</p>
+        <p className="mt-1 text-xs text-black/65 line-clamp-2 sm:text-sm">{description}</p>
 
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <p className="font-semibold text-[#7C3A2E]">
+        <div className="mt-3 flex items-center justify-between gap-2 sm:mt-4 sm:gap-3">
+          <p className="text-sm font-semibold text-[#7C3A2E] sm:text-base">
             ₱{Number(price || 0).toLocaleString()}
           </p>
 
@@ -53,7 +60,7 @@ function ProductCard({ item, onQuickView }) {
               e.stopPropagation();
               onQuickView?.(item);
             }}
-            className="rounded-full bg-baybay-cocoa text-white px-4 py-2 text-sm shadow-soft hover:translate-y-[-1px] active:translate-y-0 transition whitespace-nowrap"
+            className="rounded-full bg-baybay-cocoa px-3 py-1.5 text-xs text-white shadow-soft transition whitespace-nowrap hover:translate-y-[-1px] active:translate-y-0 sm:px-4 sm:py-2 sm:text-sm"
           >
             Quick View
           </button>
@@ -63,22 +70,27 @@ function ProductCard({ item, onQuickView }) {
   );
 }
 
-export default function ProductGrid({ products = [], loading = false, onQuickView }) {
+export default function ProductGrid({
+  products = [],
+  loading = false,
+  onQuickView,
+  gridClassName = "grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-5",
+}) {
   const content = useMemo(() => {
     if (loading) return Array.from({ length: 10 }).map((_, i) => ({ id: i, skeleton: true }));
     return Array.isArray(products) ? products : [];
   }, [products, loading]);
 
   return (
-    <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+    <div className={`mt-6 grid ${gridClassName}`}>
       {content.map((p) =>
         p.skeleton ? (
           <div
             key={p.id}
             className="rounded-2xl bg-white border border-baybay-sand shadow-soft overflow-hidden"
           >
-            <div className="aspect-[4/3] bg-baybay-sand animate-pulse" />
-            <div className="p-4 space-y-3">
+            <div className="aspect-[5/4] bg-baybay-sand animate-pulse sm:aspect-[4/3]" />
+            <div className="p-3 space-y-2.5 sm:p-4 sm:space-y-3">
               <div className="h-4 w-2/3 bg-baybay-sand animate-pulse rounded" />
               <div className="h-3 w-full bg-baybay-sand animate-pulse rounded" />
               <div className="h-3 w-5/6 bg-baybay-sand animate-pulse rounded" />

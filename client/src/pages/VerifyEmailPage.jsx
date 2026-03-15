@@ -3,26 +3,34 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Mail, ShieldCheck } from "lucide-react";
 import { api } from "../lib/api";
 import { getFriendlyError } from "../lib/friendlyErrors";
+import {
+  INPUT_LIMITS,
+  PATTERNS,
+  isValidEmail,
+  normalizeEmail,
+  sanitizeEmailInput,
+  sanitizeOtpInput,
+} from "../lib/inputValidation";
 
 export default function VerifyEmailPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [email, setEmail] = useState(searchParams.get("email") || "");
+  const [email, setEmail] = useState(() => sanitizeEmailInput(searchParams.get("email") || ""));
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  const cleanEmail = email.trim().toLowerCase();
+  const cleanEmail = normalizeEmail(email);
 
   const verifyCode = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!cleanEmail) return setError("Please enter your email.");
-    if (!/^\d{6}$/.test(otp.trim())) return setError("Code must be exactly 6 digits.");
+    if (!isValidEmail(cleanEmail)) return setError("Please enter a valid email.");
+    if (!new RegExp(PATTERNS.OTP).test(otp.trim())) return setError("Code must be exactly 6 digits.");
 
     setLoading(true);
     try {
@@ -46,7 +54,7 @@ export default function VerifyEmailPage() {
 
   const resendCode = async () => {
     setError("");
-    if (!cleanEmail) return setError("Enter your email first.");
+    if (!isValidEmail(cleanEmail)) return setError("Enter a valid email first.");
 
     setResending(true);
     try {
@@ -123,10 +131,13 @@ export default function VerifyEmailPage() {
                   <Mail size={17} className="text-black/45" />
                   <input
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(sanitizeEmailInput(e.target.value))}
                     type="email"
                     placeholder="juandelacruz@gmail.com"
                     className="w-full bg-transparent px-3 py-3 text-sm outline-none"
+                    maxLength={INPUT_LIMITS.EMAIL_MAX}
+                    autoComplete="email"
+                    required
                   />
                 </div>
               </div>
@@ -145,11 +156,15 @@ export default function VerifyEmailPage() {
                 </div>
                 <input
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  onChange={(e) => setOtp(sanitizeOtpInput(e.target.value))}
                   type="text"
                   inputMode="numeric"
                   placeholder="123456"
                   className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm tracking-[0.2em] outline-none focus:border-[#7C3A2E] focus:ring-4 focus:ring-[#7C3A2E]/15 sm:tracking-[0.28em]"
+                  maxLength={INPUT_LIMITS.OTP_LENGTH}
+                  pattern={PATTERNS.OTP}
+                  autoComplete="one-time-code"
+                  required
                 />
               </div>
 

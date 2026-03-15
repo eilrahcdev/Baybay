@@ -5,6 +5,7 @@ import logo from "../assets/baybay logo.png";
 import { api } from "../lib/api";
 import { useAuth } from "../auth/AuthProvider";
 import { resolveImageUrl } from "../lib/imageUrl";
+import { INPUT_LIMITS, sanitizeSearchInput } from "../lib/inputValidation";
 
 function LogoutConfirmModal({ open, onClose, onConfirm }) {
   if (!open) return null;
@@ -194,16 +195,17 @@ export default function Navbar() {
           <div className="flex items-center gap-3 relative">
             {/* Search input with dropdown */}
             <div className="relative hidden lg:block" ref={boxRef}>
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onFocus={() => {
-                  if (query.trim()) setSearchOpen(true);
-                }}
-                className="w-56 rounded-full border border-white/20 bg-white/10 py-1.5 pl-4 pr-10 text-sm text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/30"
-                placeholder="Search products or artisans..."
-                type="text"
-              />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(sanitizeSearchInput(e.target.value))}
+                  onFocus={() => {
+                    if (query.trim()) setSearchOpen(true);
+                  }}
+                  className="w-56 rounded-full border border-white/20 bg-white/10 py-1.5 pl-4 pr-10 text-sm text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/30"
+                  placeholder="Search products or artisans..."
+                  type="text"
+                  maxLength={INPUT_LIMITS.SEARCH_QUERY_MAX}
+                />
 
               <span className="absolute right-3 top-1.5 text-white/80 text-lg">
                 <Search size={18} />

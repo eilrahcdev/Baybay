@@ -3,6 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { Mail } from "lucide-react";
 import { api } from "../lib/api";
 import { getFriendlyError } from "../lib/friendlyErrors";
+import {
+  INPUT_LIMITS,
+  isValidEmail,
+  normalizeEmail,
+  sanitizeEmailInput,
+} from "../lib/inputValidation";
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
@@ -16,8 +22,8 @@ export default function ForgotPassword() {
     e.preventDefault();
     setError("");
 
-    const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail) return setError("Please enter your email.");
+    const cleanEmail = normalizeEmail(email);
+    if (!isValidEmail(cleanEmail)) return setError("Please enter a valid email.");
 
     setLoading(true);
     try {
@@ -101,10 +107,13 @@ export default function ForgotPassword() {
                   <Mail size={17} className="text-black/45" />
                   <input
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(sanitizeEmailInput(e.target.value))}
                     type="email"
                     placeholder="juandelacruz@gmail.com"
                     className="w-full bg-transparent px-3 py-3 text-sm outline-none"
+                    maxLength={INPUT_LIMITS.EMAIL_MAX}
+                    autoComplete="email"
+                    required
                   />
                 </div>
               </div>

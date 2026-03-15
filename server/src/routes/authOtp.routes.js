@@ -1,6 +1,5 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import { z } from "zod";
 import { sendOtpEmail } from "../mailer.js";
 import { findAuthUserByEmail } from "../authUsers.js";
 import { insertEmailOtpRecord } from "../emailOtpStore.js";
@@ -10,27 +9,14 @@ import {
   updateOtpById,
   updateUserByEmail,
 } from "../supabaseStore.js";
+import {
+  getValidationErrorMessage,
+  requestOtpSchema,
+  resetPasswordSchema,
+  verifyOtpSchema,
+} from "../validators.js";
 
 const router = express.Router();
-
-const requestSchema = z.object({
-  email: z.string().email(),
-  purpose: z.enum(["verify", "reset"]),
-});
-
-const otpSchema = z.string().regex(/^\d{6}$/);
-
-const verifySchema = z.object({
-  email: z.string().email(),
-  purpose: z.enum(["verify", "reset"]),
-  otp: otpSchema,
-});
-
-const resetSchema = z.object({
-  email: z.string().email(),
-  otp: otpSchema,
-  newPassword: z.string().min(8),
-});
 
 const MAX_ATTEMPTS = 5;
 
@@ -112,8 +98,10 @@ async function verifyOtpRecord({ record, otp }) {
 }
 
 router.post("/auth/request-otp", async (req, res) => {
-  const parsed = requestSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: "Invalid request" });
+  const parsed = requestOtpSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ message: getValidationErrorMessage(parsed.error, "Invalid request") });
+  }
 
   const email = parsed.data.email.toLowerCase().trim();
   const purpose = parsed.data.purpose;
@@ -161,8 +149,10 @@ router.post("/auth/request-otp", async (req, res) => {
 });
 
 router.post("/auth/verify-otp", async (req, res) => {
-  const parsed = verifySchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: "Invalid request" });
+  const parsed = verifyOtpSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ message: getValidationErrorMessage(parsed.error, "Invalid request") });
+  }
 
   const email = parsed.data.email.toLowerCase().trim();
   const purpose = parsed.data.purpose;
@@ -215,8 +205,10 @@ router.post("/auth/verify-otp", async (req, res) => {
 });
 
 router.post("/auth/reset-password", async (req, res) => {
-  const parsed = resetSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ message: "Invalid request" });
+  const parsed = resetPasswordSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ message: getValidationErrorMessage(parsed.error, "Invalid request") });
+  }
 
   const email = parsed.data.email.toLowerCase().trim();
   const otp = parsed.data.otp;

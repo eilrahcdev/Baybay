@@ -1,10 +1,23 @@
 import { getAuthToken } from "./authToken";
 
-const API_URL =
-  import.meta.env.VITE_API_URL ||
-  (import.meta.env.MODE === "development"
-    ? "http://localhost:5000/api"
-    : "https://baybay.onrender.com/api");
+function trimTrailingSlash(value) {
+  return String(value || "").replace(/\/+$/, "");
+}
+
+function resolveApiUrl() {
+  const baseUrl = String(import.meta.env.VITE_API_BASE_URL || "").trim();
+  const configuredApiUrl = String(import.meta.env.VITE_API_URL || "").trim();
+  const isDev = import.meta.env.MODE === "development";
+  const fallbackUrl = isDev ? "http://localhost:5000" : "https://baybay.onrender.com";
+  const preferredUrl = isDev
+    ? baseUrl || configuredApiUrl || fallbackUrl
+    : configuredApiUrl || baseUrl || fallbackUrl;
+
+  const resolved = trimTrailingSlash(preferredUrl);
+  return /\/api$/i.test(resolved) ? resolved : `${resolved}/api`;
+}
+
+const API_URL = resolveApiUrl();
 
 async function http(path, options = {}) {
   try {

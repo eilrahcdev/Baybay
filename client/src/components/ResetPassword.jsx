@@ -3,13 +3,23 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 import { api } from "../lib/api";
 import { getFriendlyError } from "../lib/friendlyErrors";
+import {
+  INPUT_LIMITS,
+  PATTERNS,
+  isStrongPassword,
+  isValidEmail,
+  normalizeEmail,
+  sanitizeEmailInput,
+  sanitizeOtpInput,
+  sanitizePasswordInput,
+} from "../lib/inputValidation";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const [show, setShow] = useState(false);
-  const [email, setEmail] = useState(searchParams.get("email") || "");
+  const [email, setEmail] = useState(() => sanitizeEmailInput(searchParams.get("email") || ""));
   const [otp, setOtp] = useState("");
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
@@ -23,12 +33,14 @@ export default function ResetPassword() {
     e.preventDefault();
     setError("");
 
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanEmail = normalizeEmail(email);
     const cleanOtp = otp.trim();
 
-    if (!cleanEmail) return setError("Please enter your email.");
-    if (!/^\d{6}$/.test(cleanOtp)) return setError("OTP must be exactly 6 digits.");
-    if (!pw || pw.length < 8) return setError("Password must be at least 8 characters.");
+    if (!isValidEmail(cleanEmail)) return setError("Please enter a valid email.");
+    if (!new RegExp(PATTERNS.OTP).test(cleanOtp)) return setError("OTP must be exactly 6 digits.");
+    if (!isStrongPassword(pw)) {
+      return setError("Use 8-72 chars with uppercase, lowercase, number, and special character.");
+    }
     if (pw !== pw2) return setError("Passwords do not match.");
 
     setLoading(true);
@@ -53,8 +65,8 @@ export default function ResetPassword() {
 
   const resendCode = async () => {
     setError("");
-    const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail) return setError("Enter your email first.");
+    const cleanEmail = normalizeEmail(email);
+    if (!isValidEmail(cleanEmail)) return setError("Enter a valid email first.");
 
     setSendingCode(true);
     try {
@@ -101,10 +113,13 @@ export default function ResetPassword() {
                 <Mail size={17} className="text-black/45" />
                 <input
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(sanitizeEmailInput(e.target.value))}
                   type="email"
                   placeholder="juandelacruz@gmail.com"
                   className="w-full bg-transparent px-3 py-3 text-sm outline-none"
+                  maxLength={INPUT_LIMITS.EMAIL_MAX}
+                  autoComplete="email"
+                  required
                 />
               </div>
             </div>
@@ -123,11 +138,15 @@ export default function ResetPassword() {
               </div>
               <input
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                onChange={(e) => setOtp(sanitizeOtpInput(e.target.value))}
                 type="text"
                 inputMode="numeric"
                 placeholder="123456"
                 className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm tracking-[0.2em] outline-none focus:border-[#7C3A2E] focus:ring-4 focus:ring-[#7C3A2E]/15 sm:tracking-[0.3em]"
+                maxLength={INPUT_LIMITS.OTP_LENGTH}
+                pattern={PATTERNS.OTP}
+                autoComplete="one-time-code"
+                required
               />
             </div>
 
@@ -137,10 +156,16 @@ export default function ResetPassword() {
                 <LockKeyhole size={17} className="text-black/45" />
                 <input
                   value={pw}
-                  onChange={(e) => setPw(e.target.value)}
+                  onChange={(e) => setPw(sanitizePasswordInput(e.target.value))}
                   type={show ? "text" : "password"}
                   placeholder="Create a new password"
                   className="w-full bg-transparent px-3 py-3 pr-12 text-sm outline-none"
+                  minLength={8}
+                  maxLength={INPUT_LIMITS.PASSWORD_MAX}
+                  pattern={PATTERNS.PASSWORD}
+                  title="8-72 chars with uppercase, lowercase, number, and special character."
+                  autoComplete="new-password"
+                  required
                 />
                 <button
                   type="button"
@@ -157,10 +182,14 @@ export default function ResetPassword() {
               <label className="text-sm font-medium text-black/70">Confirm password</label>
               <input
                 value={pw2}
-                onChange={(e) => setPw2(e.target.value)}
+                onChange={(e) => setPw2(sanitizePasswordInput(e.target.value))}
                 type={show ? "text" : "password"}
                 placeholder="Confirm new password"
                 className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm outline-none focus:border-[#7C3A2E] focus:ring-4 focus:ring-[#7C3A2E]/15"
+                minLength={8}
+                maxLength={INPUT_LIMITS.PASSWORD_MAX}
+                autoComplete="new-password"
+                required
               />
             </div>
 

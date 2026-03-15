@@ -50,7 +50,7 @@ export default function TeamCarousel({ team = [], loading = false }) {
   return (
     <section
       id="team"
-      className="relative overflow-hidden px-4 py-20 reveal-section sm:px-6 lg:px-8"
+      className="relative -mt-1 overflow-hidden bg-[linear-gradient(180deg,#fcf3ec_0%,#f4ece8_100%)] px-4 py-14 reveal-section sm:px-6 sm:py-16 lg:px-8"
     >
       <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_1px_1px,rgba(124,58,46,0.08)_1px,transparent_1px)] [background-size:20px_20px]" />
 

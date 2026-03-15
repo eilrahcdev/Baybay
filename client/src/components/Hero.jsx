@@ -15,6 +15,7 @@ export default function Hero() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#32130d]/75 via-[#5f2a20]/65 to-[#1f1512]/70" />
         <div className="absolute -left-20 top-14 h-56 w-56 rounded-full bg-[#c48a7e]/35 blur-3xl" />
         <div className="absolute -right-14 bottom-10 h-64 w-64 rounded-full bg-[#7c3a2e]/45 blur-3xl" />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-[#fff9f4]" />
       </div>
 
       {/* Hero content */}

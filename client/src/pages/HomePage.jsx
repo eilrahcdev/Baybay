@@ -94,8 +94,6 @@ export default function HomePage({
     <>
       <Navbar />
       <Hero />
-      <AboutPurpose />
-
       <Artisan
         artisans={artisans}
         loading={loadingArtisans}
@@ -103,6 +101,7 @@ export default function HomePage({
           goProtected(`/artisans/${encodeURIComponent(String(artisanId))}`)
         }
       />
+      <AboutPurpose />
 
       <Shows
         featured={featured}

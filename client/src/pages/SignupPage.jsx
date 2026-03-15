@@ -15,6 +15,17 @@ import {
 import { api } from "../lib/api";
 import { TERMS_CONTENT, PRIVACY_CONTENT } from "../components/LegalContent";
 import { getFriendlyError } from "../lib/friendlyErrors";
+import {
+  INPUT_LIMITS,
+  PATTERNS,
+  isValidFullName,
+  isStrongPassword,
+  isValidEmail,
+  normalizeEmail,
+  sanitizeEmailInput,
+  sanitizeNameInput,
+  sanitizePasswordInput,
+} from "../lib/inputValidation";
 
 function getPasswordStrength(pw) {
   const v = (pw || "").trim();
@@ -253,12 +264,18 @@ export default function Signup() {
     e.preventDefault();
     setError("");
 
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanEmail = normalizeEmail(email);
     const cleanName = fullName.trim();
 
     if (!cleanName) return setError("Please enter your full name.");
-    if (!cleanEmail) return setError("Please enter your email.");
+    if (!isValidFullName(cleanName)) {
+      return setError("Full name must only contain letters and spaces.");
+    }
+    if (!isValidEmail(cleanEmail)) return setError("Please enter a valid email.");
     if (!password) return setError("Please enter a password.");
+    if (!isStrongPassword(password)) {
+      return setError("Use 8-72 chars with uppercase, lowercase, number, and special character.");
+    }
     if (password !== confirmPassword) return setError("Passwords do not match.");
     if (!acceptedLegal)
       return setError("Please accept the Terms & Conditions and Privacy Policy.");
@@ -293,8 +310,8 @@ export default function Signup() {
 
   const resendVerification = async () => {
     setError("");
-    const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail) return setError("Enter your email first.");
+    const cleanEmail = normalizeEmail(email);
+    if (!isValidEmail(cleanEmail)) return setError("Enter a valid email first.");
 
     setLoading(true);
     try {
@@ -413,10 +430,16 @@ export default function Signup() {
                     <User size={17} className="text-black/45" />
                     <input
                       value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
+                      onChange={(e) => setFullName(sanitizeNameInput(e.target.value))}
                       type="text"
                       placeholder="Juan Dela Cruz"
                       className="w-full bg-transparent px-3 py-3 text-sm outline-none"
+                      maxLength={INPUT_LIMITS.FULL_NAME_MAX}
+                      minLength={2}
+                      pattern={PATTERNS.FULL_NAME}
+                      title="Use letters and spaces only."
+                      autoComplete="name"
+                      required
                     />
                   </div>
                 </div>
@@ -427,10 +450,13 @@ export default function Signup() {
                     <Mail size={17} className="text-black/45" />
                     <input
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => setEmail(sanitizeEmailInput(e.target.value))}
                       type="email"
                       placeholder="juandelacruz@gmail.com"
                       className="w-full bg-transparent px-3 py-3 text-sm outline-none"
+                      maxLength={INPUT_LIMITS.EMAIL_MAX}
+                      autoComplete="email"
+                      required
                     />
                   </div>
                 </div>
@@ -441,10 +467,16 @@ export default function Signup() {
                     <LockKeyhole size={17} className="text-black/45" />
                     <input
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => setPassword(sanitizePasswordInput(e.target.value))}
                       type={showPassword ? "text" : "password"}
                       placeholder="Create a password"
                       className="w-full bg-transparent px-3 py-3 pr-12 text-sm outline-none"
+                      minLength={8}
+                      maxLength={INPUT_LIMITS.PASSWORD_MAX}
+                      pattern={PATTERNS.PASSWORD}
+                      title="8-72 chars with uppercase, lowercase, number, and special character."
+                      autoComplete="new-password"
+                      required
                     />
                     <button
                       type="button"
@@ -490,10 +522,14 @@ export default function Signup() {
                     <LockKeyhole size={17} className="text-black/45" />
                     <input
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onChange={(e) => setConfirmPassword(sanitizePasswordInput(e.target.value))}
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Confirm password"
                       className="w-full bg-transparent px-3 py-3 pr-12 text-sm outline-none"
+                      minLength={8}
+                      maxLength={INPUT_LIMITS.PASSWORD_MAX}
+                      autoComplete="new-password"
+                      required
                     />
                     <button
                       type="button"

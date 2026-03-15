@@ -2,6 +2,12 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import baybayLogo from "../assets/baybay logo.png";
 import { api } from "../lib/api";
+import {
+  INPUT_LIMITS,
+  isValidEmail,
+  normalizeEmail,
+  sanitizeEmailInput,
+} from "../lib/inputValidation";
 
 export default function Footer() {
   const [email, setEmail] = useState("");
@@ -10,9 +16,9 @@ export default function Footer() {
 
   const submitNewsletter = async (e) => {
     e.preventDefault();
-    const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail) {
-      setFeedback("Please enter your email address.");
+    const cleanEmail = normalizeEmail(email);
+    if (!isValidEmail(cleanEmail)) {
+      setFeedback("Please enter a valid email address.");
       return;
     }
 
@@ -30,7 +36,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="border-t border-[#7C3A2E]/15 bg-[#211210] pt-14 pb-8 text-white">
+    <footer className="relative -mt-1 bg-[linear-gradient(180deg,#f4ece8_0%,#2a1714_12%,#211210_100%)] pt-14 pb-8 text-white">
       <div className="container">
         <div className="mb-12 grid grid-cols-1 gap-10 rounded-3xl border border-white/10 bg-white/[0.03] p-7 sm:grid-cols-2 lg:grid-cols-4">
           {/* Logo + Description */}
@@ -103,7 +109,9 @@ export default function Footer() {
                 placeholder="Email Address"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(sanitizeEmailInput(e.target.value))}
+                maxLength={INPUT_LIMITS.EMAIL_MAX}
+                required
               />
               <button
                 type="submit"

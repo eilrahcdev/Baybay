@@ -65,8 +65,8 @@ export default function App() {
   const featuredProducts = useMemo(() => {
     const list = Array.isArray(products) ? products : [];
     const featured = list.filter((p) => p?.is_featured === true);
-    if (featured.length > 0) return featured.slice(0, 5);
-    return list.slice(0, 5);
+    if (featured.length > 0) return featured.slice(0, 6);
+    return list.slice(0, 6);
   }, [products]);
 
   const productsByCategory = useMemo(() => {

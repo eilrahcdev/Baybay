@@ -13,6 +13,7 @@ import {
   getUserById,
   getUserByEmail,
 } from "../supabaseStore.js";
+import { getValidationErrorMessage, loginSchema, signupSchema } from "../validators.js";
 
 const router = express.Router();
 
@@ -66,22 +67,20 @@ async function issueSignupVerificationOtp({ email }) {
 router.post("/signup", async (req, res) => {
   try {
     console.log("[SIGNUP] route hit");
-    console.log("[SIGNUP] raw body", req.body);
+    const parsed = signupSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        message: getValidationErrorMessage(parsed.error, "full_name, email, password are required"),
+      });
+    }
 
-    const { full_name, email, password } = req.body || {};
-
-    const cleanName = String(full_name || "").trim();
-    const cleanEmail = String(email || "").trim().toLowerCase();
+    const { full_name: cleanName, email: cleanEmail, password } = parsed.data;
 
     console.log("[SIGNUP] cleaned input", {
       cleanName,
       cleanEmail,
       hasPassword: Boolean(password),
     });
-
-    if (!cleanName || !cleanEmail || !password) {
-      return res.status(400).json({ message: "full_name, email, password are required" });
-    }
 
     console.log("[SIGNUP] checking existing user", { email: cleanEmail });
     const existing = await findAuthUserByEmail(cleanEmail);
@@ -165,13 +164,14 @@ router.post("/signup", async (req, res) => {
  */
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body || {};
-
-    if (!email || !password) {
-      return res.status(400).json({ message: "email and password are required" });
+    const parsed = loginSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        message: getValidationErrorMessage(parsed.error, "email and password are required"),
+      });
     }
 
-    const cleanEmail = String(email).trim().toLowerCase();
+    const { email: cleanEmail, password } = parsed.data;
     const user = await getUserByEmail(cleanEmail);
 
     if (!user?.password_hash) {
