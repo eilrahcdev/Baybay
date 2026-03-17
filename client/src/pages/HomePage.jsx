@@ -12,6 +12,7 @@ import Team from "../components/Team";
 import Footer from "../components/Footer";
 import ProductQuickViewModal from "../components/ProductQuickViewModal";
 import AuthGateModal from "../components/AuthGateModal";
+import { usePageEnterTransition, useTransitionNavigate } from "../hooks/useRouteTransition";
 
 export default function HomePage({
   featured = [],
@@ -20,6 +21,7 @@ export default function HomePage({
   loadingTeam = false,
 }) {
   const navigate = useNavigate();
+  const transitionNavigate = useTransitionNavigate();
   const location = useLocation();
   const { user } = useAuth();
 
@@ -32,6 +34,7 @@ export default function HomePage({
   // Load featured artisans from the API.
   const [artisans, setArtisans] = useState([]);
   const [loadingArtisans, setLoadingArtisans] = useState(true);
+  usePageEnterTransition();
 
   useEffect(() => {
     let alive = true;
@@ -87,7 +90,7 @@ export default function HomePage({
       setAuthModalOpen(true);
       return;
     }
-    navigate(path);
+    transitionNavigate(path);
   };
 
   return (

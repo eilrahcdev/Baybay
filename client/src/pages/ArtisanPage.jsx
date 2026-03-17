@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams, useLocation, useNavigate } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, ExternalLink, PlayCircle } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 
@@ -7,6 +7,7 @@ import ProductGrid from "../components/ProductGrid";
 import ProductQuickViewModal from "../components/ProductQuickViewModal";
 import { api } from "../lib/api";
 import { resolveImageUrl } from "../lib/imageUrl";
+import { usePageEnterTransition, useTransitionNavigate } from "../hooks/useRouteTransition";
 
 function inferCategoryFromArtisan(artisan) {
   const text = `${artisan?.name || ""} ${artisan?.title || ""}`.toLowerCase();
@@ -164,6 +165,9 @@ const ARTISAN_TIKTOK_URL_FALLBACK = {
   "robert fernandez": "https://vt.tiktok.com/ZSuYDNnGo/",
 };
 
+const DEFAULT_ARTISAN_BIO =
+  "This artisan preserves traditional craftsmanship, passing skills from one generation to the next.";
+
 function pickVideoUrl(video) {
   const url =
     video?.video_url ||
@@ -238,6 +242,22 @@ function decodeRouteValue(value) {
   }
 }
 
+function formatArtisanBioParagraphs(bio) {
+  const raw = String(bio || "")
+    .replace(/\r\n?/g, "\n")
+    .trim();
+
+  if (!raw) return [DEFAULT_ARTISAN_BIO];
+
+  const paragraphs = raw
+    .split(/\n{2,}/)
+    .map((chunk) => chunk.replace(/\n+/g, " ").replace(/\s{2,}/g, " ").trim())
+    .filter(Boolean);
+
+  if (paragraphs.length > 0) return paragraphs;
+  return [raw.replace(/\s+/g, " ").trim()];
+}
+
 function findArtisanByRouteId(list, routeId) {
   const target = decodeRouteValue(routeId);
   if (!target) return null;
@@ -263,12 +283,14 @@ export default function ArtisanPage() {
 
   const { user, loadingAuth } = useAuth();
   const navigate = useNavigate();
+  const transitionNavigate = useTransitionNavigate();
   const location = useLocation();
   const [artisan, setArtisan] = useState(null);
   const [products, setProducts] = useState([]);
   const [tiktokVideos, setTiktokVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
+  usePageEnterTransition();
 
   useEffect(() => {
     if (loadingAuth) return;
@@ -354,19 +376,21 @@ export default function ArtisanPage() {
       artisan?.image,
     "https://images.unsplash.com/photo-1520975693416-35a3c5b84f41?w=1600"
   );
+  const bioParagraphs = formatArtisanBioParagraphs(artisan?.bio);
 
   return (
     <>
       <section className="page-shell py-10 sm:py-14">
         <div className="container">
           <div className="mb-6">
-            <Link
-              to="/"
-              className="inline-flex items-center gap-2 rounded-full border border-[#7C3A2E]/25 bg-white/80 px-5 py-2.5 text-sm font-semibold text-[#7C3A2E] shadow-sm transition hover:bg-white"
+            <button
+              type="button"
+              onClick={() => transitionNavigate("/")}
+              className="inline-flex items-center gap-2 rounded-full border border-[#7C3A2E]/25 bg-white/80 px-5 py-2.5 text-sm font-semibold text-[#7C3A2E] shadow-sm transition duration-200 ease-out transform hover:-translate-y-0.5 hover:bg-white hover:shadow-lg/10 active:scale-95 active:opacity-90"
             >
               <ArrowLeft size={16} />
               Back to Home
-            </Link>
+            </button>
           </div>
 
           {loading ? (
@@ -392,11 +416,11 @@ export default function ArtisanPage() {
             <>
               <div className="surface-card overflow-hidden">
                 <div className="grid lg:grid-cols-2">
-                  <div className="bg-black/5">
+                  <div className="relative min-h-[320px] bg-black/5 sm:min-h-[420px]">
                     <img
                       src={image}
                       alt={artisan?.name || "Artisan"}
-                      className="h-64 w-full object-cover sm:h-[320px] lg:h-[420px]"
+                      className="absolute inset-0 h-full w-full object-cover object-center"
                     />
                   </div>
 
@@ -409,10 +433,13 @@ export default function ArtisanPage() {
                       {artisan?.title || "Local Artisan"}
                     </p>
 
-                    <p className="mt-5 text-black/70 leading-relaxed">
-                      {artisan?.bio ||
-                        "This artisan preserves traditional craftsmanship, passing skills from one generation to the next."}
-                    </p>
+                    <div className="mt-5 space-y-4 text-black/70 leading-relaxed">
+                      {bioParagraphs.map((paragraph, index) => (
+                        <p key={`${artisan?.id || artisan?.artisan_id || "artisan"}-bio-${index}`}>
+                          {paragraph}
+                        </p>
+                      ))}
+                    </div>
 
                     <div className="mt-6 flex flex-wrap items-center gap-3">
                       {facebookUrl ? (

@@ -1,17 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
 import ProductGrid from "../components/ProductGrid";
 import ProductQuickViewModal from "../components/ProductQuickViewModal";
 import { useAuth } from "../auth/AuthProvider";
+import { usePageEnterTransition, useTransitionNavigate } from "../hooks/useRouteTransition";
 
 export default function ProductsPage({ categories = {}, loading = false }) {
   const { user, loadingAuth } = useAuth();
   const navigate = useNavigate();
+  const transitionNavigate = useTransitionNavigate();
   const location = useLocation();
 
   const [quickViewProduct, setQuickViewProduct] = useState(null);
+  usePageEnterTransition();
 
   // If user is not logged in, redirect to Home and open the auth modal there.
   useEffect(() => {
@@ -23,6 +26,22 @@ export default function ProductsPage({ categories = {}, loading = false }) {
       });
     }
   }, [user, loadingAuth, navigate, location.pathname, location.search]);
+
+  // Open this page at the top instantly (no long smooth scroll carry-over).
+  useLayoutEffect(() => {
+    if (loadingAuth || !user) return;
+    const root = document.documentElement;
+    const previous = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    const restore = window.requestAnimationFrame(() => {
+      root.style.scrollBehavior = previous;
+    });
+    return () => {
+      window.cancelAnimationFrame(restore);
+      root.style.scrollBehavior = previous;
+    };
+  }, [loadingAuth, user]);
 
   const orderedCategories = useMemo(() => {
     const keys = Object.keys(categories || {});
@@ -41,13 +60,14 @@ export default function ProductsPage({ categories = {}, loading = false }) {
       <section className="page-shell py-10 sm:py-14">
         <div className="container">
           <div className="mb-6">
-            <Link
-              to="/"
-              className="inline-flex items-center gap-2 rounded-full border border-[#7C3A2E]/25 bg-white/80 px-5 py-2.5 text-sm font-semibold text-[#7C3A2E] shadow-sm transition hover:bg-white"
+            <button
+              type="button"
+              onClick={() => transitionNavigate("/")}
+              className="inline-flex items-center gap-2 rounded-full border border-[#7C3A2E]/25 bg-white/80 px-5 py-2.5 text-sm font-semibold text-[#7C3A2E] shadow-sm transition duration-200 ease-out transform hover:-translate-y-0.5 hover:bg-white hover:shadow-lg/10 active:scale-95 active:opacity-90"
             >
               <ArrowLeft size={16} />
               Back to Home
-            </Link>
+            </button>
           </div>
 
           <div className="mb-10">

@@ -150,6 +150,30 @@
   animation: fadeUp 650ms ease both;
 }
 
+/* Route transition (button click navigation): fade out + slight scale down, then fade/scale in. */
+#root.route-fade-scale-exit {
+  opacity: 0;
+  transform: scale(0.985);
+  transform-origin: top center;
+  transition: opacity 280ms ease, transform 280ms ease;
+}
+
+#root.route-fade-scale-enter {
+  animation: routeFadeScaleIn 320ms ease both;
+  transform-origin: top center;
+}
+
+@keyframes routeFadeScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* Reveal animation for sections. */
 .reveal-section {
   opacity: 0;
@@ -165,6 +189,14 @@
 
 /* Respect reduced motion preference. */
 @media (prefers-reduced-motion: reduce) {
+  #root.route-fade-scale-exit,
+  #root.route-fade-scale-enter {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    animation: none;
+  }
+
   .reveal-section {
     opacity: 1;
     transform: none;

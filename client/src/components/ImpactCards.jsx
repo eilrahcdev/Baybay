@@ -1,5 +1,6 @@
 import { HeartHandshake, Hand, Users } from "lucide-react";
-
+import whywedoit from "../assets/WHY WE DO IT .png";
+import whowesupport from "../assets/WHO WE SUPPORT .png";
 const items = [
   {
     title: "What We Do",
@@ -11,13 +12,13 @@ const items = [
     title: "Why We Do It",
     icon: HeartHandshake,
     desc: "We celebrate heritage and strengthen community income by connecting tradition with modern access.",
-    img: "https://images.unsplash.com/photo-1526481280695-3c687fd5432c?w=1200",
+    img: whywedoit,
   },
   {
     title: "Who We Support",
     icon: Users,
     desc: "Artisans, home-based entrepreneurs, and cultural communities that keep Pangasinan’s heritage alive.",
-    img: "https://images.unsplash.com/photo-1520975693416-35a3c5b84f41?w=1200",
+    img: whowesupport,
   },
 ];
 

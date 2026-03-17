@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { resolveImageUrl } from "../lib/imageUrl";
 
@@ -20,6 +20,10 @@ export default function TeamCarousel({ team = [], loading = false }) {
   }, [team]);
 
   const [idx, setIdx] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const transitionTimer = useRef(null);
+  const idxRef = useRef(idx);
+  const FADE_DURATION = 300;
 
   useEffect(() => {
     if (idx > Math.max(0, slides.length - 1)) {
@@ -28,24 +32,51 @@ export default function TeamCarousel({ team = [], loading = false }) {
   }, [idx, slides.length]);
 
   useEffect(() => {
+    idxRef.current = idx;
+  }, [idx]);
+
+  const scheduleSlideChange = useCallback(
+    (targetIdx) => {
+      if (!slides.length || targetIdx === idxRef.current) return;
+      setIsTransitioning(true);
+      window.clearTimeout(transitionTimer.current);
+      transitionTimer.current = window.setTimeout(() => {
+        setIdx(targetIdx);
+        setIsTransitioning(false);
+        transitionTimer.current = null;
+      }, FADE_DURATION);
+    },
+    [slides.length]
+  );
+
+  useEffect(() => {
     if (slides.length <= 1) return;
 
-    const timer = setInterval(() => {
-      setIdx((v) => (v + 1) % slides.length);
+    const timer = window.setInterval(() => {
+      const next = (idxRef.current + 1) % slides.length;
+      scheduleSlideChange(next);
     }, 5000);
 
-    return () => clearInterval(timer);
-  }, [slides.length]);
+    return () => window.clearInterval(timer);
+  }, [slides.length, scheduleSlideChange]);
 
   function prev() {
     if (!slides.length) return;
-    setIdx((v) => (v - 1 + slides.length) % slides.length);
+    const target = (idx - 1 + slides.length) % slides.length;
+    scheduleSlideChange(target);
   }
 
   function next() {
     if (!slides.length) return;
-    setIdx((v) => (v + 1) % slides.length);
+    const target = (idx + 1) % slides.length;
+    scheduleSlideChange(target);
   }
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(transitionTimer.current);
+    };
+  }, []);
 
   return (
     <section
@@ -85,7 +116,11 @@ export default function TeamCarousel({ team = [], loading = false }) {
           </div>
         ) : (
           <div className="rounded-3xl border border-black/10 bg-white/80 p-4 shadow-soft backdrop-blur sm:p-6">
-            <div className="overflow-hidden rounded-2xl">
+            <div
+              className={`overflow-hidden rounded-2xl transition-all duration-300 ease-in-out ${
+                isTransitioning ? "opacity-0 scale-[0.985]" : "opacity-100 scale-100"
+              }`}
+            >
               <img
                 src={slides[idx].image}
                 alt={slides[idx].title}
@@ -100,7 +135,7 @@ export default function TeamCarousel({ team = [], loading = false }) {
                   <button
                     type="button"
                     onClick={prev}
-                    className="grid h-10 w-10 place-items-center rounded-full border border-black/10 bg-white text-black/70 transition hover:bg-black/5"
+                    className="grid h-10 w-10 place-items-center rounded-full border border-black/10 bg-white text-black/70 transition duration-200 ease-out transform hover:bg-black/5 hover:shadow-lg/10 active:scale-95 active:opacity-90"
                     aria-label="Previous"
                   >
                     <ChevronLeft size={18} />
@@ -109,7 +144,7 @@ export default function TeamCarousel({ team = [], loading = false }) {
                   <button
                     type="button"
                     onClick={next}
-                    className="grid h-10 w-10 place-items-center rounded-full border border-black/10 bg-white text-black/70 transition hover:bg-black/5"
+                    className="grid h-10 w-10 place-items-center rounded-full border border-black/10 bg-white text-black/70 transition duration-200 ease-out transform hover:bg-black/5 hover:shadow-lg/10 active:scale-95 active:opacity-90"
                     aria-label="Next"
                   >
                     <ChevronRight size={18} />
@@ -121,7 +156,7 @@ export default function TeamCarousel({ team = [], loading = false }) {
                     <button
                       key={s.id}
                       type="button"
-                      onClick={() => setIdx(i)}
+                      onClick={() => scheduleSlideChange(i)}
                       className={`h-2.5 w-2.5 rounded-full transition ${
                         i === idx ? "bg-[#7C3A2E]" : "bg-black/20"
                       }`}

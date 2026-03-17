@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
 import ProductGrid from "./ProductGrid";
+import { useTransitionNavigate } from "../hooks/useRouteTransition";
 
 export default function Shows({
   featured = [],
@@ -7,6 +7,8 @@ export default function Shows({
   onQuickView,
   onViewAll,
 }) {
+  const transitionNavigate = useTransitionNavigate();
+
   return (
     <section
       id="products"
@@ -27,17 +29,18 @@ export default function Shows({
             <button
               type="button"
               onClick={onViewAll}
-              className="inline-flex items-center gap-2 rounded-full border border-[#7C3A2E]/20 bg-white/70 px-4 py-2 text-sm font-semibold text-[#7C3A2E] transition hover:bg-white"
+              className="inline-flex items-center gap-2 rounded-full border border-[#7C3A2E]/20 bg-white/70 px-4 py-2 text-sm font-semibold text-[#7C3A2E] transition duration-200 ease-out transform hover:-translate-y-0.5 hover:bg-white hover:shadow-lg/20 active:scale-95 active:opacity-90"
             >
               View All Products <span className="material-icons text-sm">arrow_forward</span>
             </button>
           ) : (
-            <Link
-              to="/products"
-              className="inline-flex items-center gap-2 rounded-full border border-[#7C3A2E]/20 bg-white/70 px-4 py-2 text-sm font-semibold text-[#7C3A2E] transition hover:bg-white"
+            <button
+              type="button"
+              onClick={() => transitionNavigate("/products")}
+              className="inline-flex items-center gap-2 rounded-full border border-[#7C3A2E]/20 bg-white/70 px-4 py-2 text-sm font-semibold text-[#7C3A2E] transition duration-200 ease-out transform hover:-translate-y-0.5 hover:bg-white hover:shadow-lg/20 active:scale-95 active:opacity-90"
             >
               View All Products <span className="material-icons text-sm">arrow_forward</span>
-            </Link>
+            </button>
           )}
         </div>
 

@@ -1,11 +1,13 @@
 import React from "react";
 
 import welcome1 from "../assets/welcome-1.jpg";
-import welcome2 from "../assets/welcome-2.webp";
-import welcome3 from "../assets/welcome-3.jpg";
+import welcome2 from "../assets/welcome-2.jpg";
+import welcome3 from "../assets/welcome-3.jpeg";
 import welcome4 from "../assets/welcome-4.jpg";
 import welcome5 from "../assets/welcome-5.jpg";
 import welcome6 from "../assets/welcome-6.jpg";
+import whyWeDoItImage from "../assets/WHY WE DO IT .png";
+import whoWeSupportImage from "../assets/WHO WE SUPPORT .png";
 
 /* Impact card */
 function ImpactCard({ img, icon, title, children, tags }) {
@@ -261,7 +263,7 @@ export default function AboutPurpose() {
             <ImpactCard
               title="Why We Do It"
               icon="favorite"
-              img="https://lh3.googleusercontent.com/aida-public/AB6AXuAVI-wGsO0k28xcgLS1bkXZ_xdBNvf3ZXjkFRJy-h8OVU_Dl3uTprH2Urv5-rSp-FOGk14oPkwLUErLicljQBOQNCLk3blP7AIqFDogUuptX_lNIhEjpdih8PxGRVN8rzdSevWGpcuo7v8RB9VMWB9WDD86obsaFEzuPSdZMRjPZkMg-dHkrLdV2ATDKWptIDsCdFyRchRJI9MiFqi2oqRNPaYcDHR_Rf7cYdsCcXYLZ5SUs-LSqLdq_oPxDCyBj0-yhwF6JQIiUCM"
+              img={whyWeDoItImage}
             >
               Many talented artisans remain unseen and underserved. We believe
               their craftsmanship deserves recognition, fair income, and
@@ -272,7 +274,7 @@ export default function AboutPurpose() {
             <ImpactCard
               title="Who We Support"
               icon="groups"
-              img="https://lh3.googleusercontent.com/aida-public/AB6AXuAYspRcANfW-ZfHIk5tMYhXqSdaZSq3MfPWUaZmmsWA1_k6fsqDBr_LLWPF9Ikxh0KWVd_i0Go-ZhvbJ7EHZQ_j8HyE1cbRbJSU3YuGjyR5zdRAe8REqSxIzD9QnaSDCv7qPZBZnyWLp6mk15FNQfFiKoYo-MQqSQCNs91oimFxVOBvfzC0qrbUuQP0AcxweBJBSQllhzX8FmEOxkLYZdeSbHv_x4f0IVdvP5iVQ-veQrCdUCAjFwJzXT-VNulkz_3wtWo4xJVD4sM"
+              img={whoWeSupportImage}
             >
               We proudly partner with Pangasinan’s talented artisans — from master potters and furniture craftsmen to traditional sword makers, bamboo weavers, and local food artisans specializing in puto.
             </ImpactCard>

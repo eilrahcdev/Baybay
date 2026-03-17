@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpRight, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { resolveImageUrl } from "../lib/imageUrl";
 import { getArtisanAlias } from "../lib/artisanAlias";
+import { useTransitionNavigate } from "../hooks/useRouteTransition";
 
 function getShortBio(text) {
   const value = String(text || "").trim();
@@ -23,6 +23,7 @@ function splitTitle(title) {
 }
 
 export default function Artisan({ artisans = [], loading = false, onViewDetails }) {
+  const transitionNavigate = useTransitionNavigate();
   const fallbackImage =
     "https://images.unsplash.com/photo-1520975693416-35a3c5b84f41?w=1600";
 
@@ -52,16 +53,38 @@ export default function Artisan({ artisans = [], loading = false, onViewDetails 
 
   const [idx, setIdx] = useState(0);
   const current = items[idx];
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const transitionTimer = useRef(null);
+  const FADE_DURATION = 300;
 
   function prev() {
     if (!items.length) return;
-    setIdx((v) => (v - 1 + items.length) % items.length);
+    const target = (idx - 1 + items.length) % items.length;
+    scheduleSlideChange(target);
   }
 
   function next() {
     if (!items.length) return;
-    setIdx((v) => (v + 1) % items.length);
+    const target = (idx + 1) % items.length;
+    scheduleSlideChange(target);
   }
+
+  function scheduleSlideChange(targetIdx) {
+    if (!items.length || targetIdx === idx) return;
+    setIsTransitioning(true);
+    window.clearTimeout(transitionTimer.current);
+    transitionTimer.current = window.setTimeout(() => {
+      setIdx(targetIdx);
+      setIsTransitioning(false);
+      transitionTimer.current = null;
+    }, FADE_DURATION);
+  }
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(transitionTimer.current);
+    };
+  }, []);
 
   return (
     <section
@@ -112,13 +135,17 @@ export default function Artisan({ artisans = [], loading = false, onViewDetails 
             </p>
           </div>
         ) : (
-          <div className="relative overflow-hidden rounded-[26px] border border-black/10 bg-white/95 shadow-[0_20px_45px_rgba(20,14,12,0.1)]">
+          <div
+            className={`relative overflow-hidden rounded-[26px] border border-black/10 bg-white/95 shadow-[0_20px_45px_rgba(20,14,12,0.1)] transition-all duration-300 ease-in-out ${
+              isTransitioning ? "opacity-0 scale-[0.985]" : "opacity-100 scale-100"
+            }`}
+          >
             {items.length > 1 && (
               <div className="absolute right-3 top-3 z-20 flex gap-2 sm:right-4 sm:top-4">
                 <button
                   type="button"
                   onClick={prev}
-                  className="grid h-9 w-9 place-items-center rounded-full border border-black/15 bg-white/90 text-black/70 transition hover:bg-white sm:h-10 sm:w-10"
+                  className="grid h-9 w-9 place-items-center rounded-full border border-black/15 bg-white/90 text-black/70 transition duration-200 ease-out hover:bg-white hover:shadow-lg/10 active:scale-95 sm:h-10 sm:w-10"
                   aria-label="Previous artisan"
                 >
                   <ChevronLeft size={18} />
@@ -126,7 +153,7 @@ export default function Artisan({ artisans = [], loading = false, onViewDetails 
                 <button
                   type="button"
                   onClick={next}
-                  className="grid h-9 w-9 place-items-center rounded-full border border-black/15 bg-white/90 text-black/70 transition hover:bg-white sm:h-10 sm:w-10"
+                  className="grid h-9 w-9 place-items-center rounded-full border border-black/15 bg-white/90 text-black/70 transition duration-200 ease-out hover:bg-white hover:shadow-lg/10 active:scale-95 sm:h-10 sm:w-10"
                   aria-label="Next artisan"
                 >
                   <ChevronRight size={18} />
@@ -139,7 +166,7 @@ export default function Artisan({ artisans = [], loading = false, onViewDetails 
                 <img
                   src={current.image}
                   alt={current.name}
-                  className="absolute inset-0 h-full w-full object-cover"
+                  className="absolute inset-0 h-full w-full object-cover object-center"
                   loading="lazy"
                   onError={(e) => {
                     console.error("Failed artisan image:", current);
@@ -184,19 +211,22 @@ export default function Artisan({ artisans = [], loading = false, onViewDetails 
                     <button
                       type="button"
                       onClick={() => onViewDetails(current.id)}
-                      className="inline-flex items-center gap-2 rounded-full bg-[#7C3A2E] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#5e2b22] sm:px-6 sm:py-3"
+                      className="inline-flex items-center gap-2 rounded-full bg-[#7C3A2E] px-5 py-2.5 text-sm font-semibold text-white transition duration-200 ease-out transform hover:-translate-y-0.5 hover:bg-[#5e2b22] hover:shadow-lg/20 active:scale-95 active:opacity-90 sm:px-6 sm:py-3"
                     >
                       View Details
                       <ArrowUpRight size={16} />
                     </button>
                   ) : (
-                    <Link
-                      to={`/artisans/${encodeURIComponent(String(current.id))}`}
-                      className="inline-flex items-center gap-2 rounded-full bg-[#7C3A2E] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#5e2b22] sm:px-6 sm:py-3"
+                    <button
+                      type="button"
+                      onClick={() =>
+                        transitionNavigate(`/artisans/${encodeURIComponent(String(current.id))}`)
+                      }
+                      className="inline-flex items-center gap-2 rounded-full bg-[#7C3A2E] px-5 py-2.5 text-sm font-semibold text-white transition duration-200 ease-out transform hover:-translate-y-0.5 hover:bg-[#5e2b22] hover:shadow-lg/20 active:scale-95 active:opacity-90 sm:px-6 sm:py-3"
                     >
                       View Details
                       <ArrowUpRight size={16} />
-                    </Link>
+                    </button>
                   )}
                 </div>
 
@@ -213,7 +243,7 @@ export default function Artisan({ artisans = [], loading = false, onViewDetails 
                         <button
                           key={String(a.id)}
                           type="button"
-                          onClick={() => setIdx(i)}
+                          onClick={() => scheduleSlideChange(i)}
                           className={`h-2.5 w-2.5 rounded-full transition ${
                             i === idx ? "bg-[#7C3A2E]" : "bg-black/15"
                           }`}
